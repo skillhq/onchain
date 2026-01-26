@@ -3,8 +3,10 @@ import { type CoinbaseMethods, withCoinbase } from './mixins/coinbase.js';
 import { type CoinGeckoMethods, withCoinGecko } from './mixins/coingecko.js';
 import { type CoinMarketCapMethods, withCoinMarketCap } from './mixins/coinmarketcap.js';
 import { type DeBankMethods, withDeBank } from './mixins/debank.js';
+import { type EtherscanMethods, withEtherscan } from './mixins/etherscan.js';
 import { type HeliusMethods, withHelius } from './mixins/helius.js';
 import { type PolymarketMethods, withPolymarket } from './mixins/polymarket.js';
+import { type SolscanMethods, withSolscan } from './mixins/solscan.js';
 import type { AbstractConstructor } from './onchain-client-base.js';
 import { OnchainClientBase } from './onchain-client-base.js';
 
@@ -15,11 +17,17 @@ type OnchainClientInstance = OnchainClientBase &
   HeliusMethods &
   CoinbaseMethods &
   BinanceMethods &
-  PolymarketMethods;
+  PolymarketMethods &
+  EtherscanMethods &
+  SolscanMethods;
 
 // Compose all mixins
-const MixedOnchainClient = withPolymarket(
-  withBinance(withCoinbase(withHelius(withDeBank(withCoinMarketCap(withCoinGecko(OnchainClientBase)))))),
+const MixedOnchainClient = withSolscan(
+  withEtherscan(
+    withPolymarket(
+      withBinance(withCoinbase(withHelius(withDeBank(withCoinMarketCap(withCoinGecko(OnchainClientBase)))))),
+    ),
+  ),
 ) as AbstractConstructor<OnchainClientInstance>;
 
 export class OnchainClient extends MixedOnchainClient {}
@@ -34,10 +42,13 @@ export type {
   ChainType,
   DefiPosition,
   DefiResult,
+  EtherscanChain,
   EvmChain,
   HistoryResult,
+  InternalTransaction,
   MarketOverview,
   MarketResult,
+  MultiChainTxSearchResult,
   NftAsset,
   NftResult,
   OnchainClientOptions,
@@ -49,5 +60,8 @@ export type {
   SupportedChain,
   TokenBalance,
   TokenPrice,
+  TokenTransfer,
   Transaction,
+  TransactionDetail,
+  TransactionDetailResult,
 } from './onchain-client-types.js';

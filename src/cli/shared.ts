@@ -148,6 +148,8 @@ export function createCliContext(normalizedArgs: string[], env: NodeJS.ProcessEn
       binanceApiSecret: creds.binanceApiSecret,
       coingeckoApiKey: creds.coingeckoApiKey,
       coinmarketcapApiKey: creds.coinmarketcapApiKey,
+      etherscanApiKey: creds.etherscanApiKey,
+      solscanApiKey: creds.solscanApiKey,
       timeoutMs: config.timeoutMs,
     };
   }

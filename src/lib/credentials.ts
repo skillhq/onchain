@@ -10,6 +10,9 @@ export interface ResolvedCredentials {
   binanceApiSecret?: string;
   coingeckoApiKey?: string;
   coinmarketcapApiKey?: string;
+  // Block explorer APIs
+  etherscanApiKey?: string;
+  solscanApiKey?: string;
   warnings: string[];
 }
 
@@ -26,6 +29,8 @@ export function resolveCredentials(config: OnchainConfig, env: NodeJS.ProcessEnv
   const binanceApiSecret = env.BINANCE_API_SECRET ?? config.binanceApiSecret;
   const coingeckoApiKey = env.COINGECKO_API_KEY ?? config.coingeckoApiKey;
   const coinmarketcapApiKey = env.COINMARKETCAP_API_KEY ?? config.coinmarketcapApiKey;
+  const etherscanApiKey = env.ETHERSCAN_API_KEY ?? config.etherscanApiKey;
+  const solscanApiKey = env.SOLSCAN_API_KEY ?? config.solscanApiKey;
 
   return {
     debankApiKey,
@@ -36,6 +41,8 @@ export function resolveCredentials(config: OnchainConfig, env: NodeJS.ProcessEnv
     binanceApiSecret,
     coingeckoApiKey,
     coinmarketcapApiKey,
+    etherscanApiKey,
+    solscanApiKey,
     warnings,
   };
 }
@@ -47,6 +54,8 @@ export function validateCredentials(creds: ResolvedCredentials): {
   hasBinance: boolean;
   hasCoinGecko: boolean;
   hasCoinMarketCap: boolean;
+  hasEtherscan: boolean;
+  hasSolscan: boolean;
 } {
   return {
     hasDebank: Boolean(creds.debankApiKey),
@@ -55,6 +64,8 @@ export function validateCredentials(creds: ResolvedCredentials): {
     hasBinance: Boolean(creds.binanceApiKey && creds.binanceApiSecret),
     hasCoinGecko: Boolean(creds.coingeckoApiKey), // Optional, free tier exists
     hasCoinMarketCap: Boolean(creds.coinmarketcapApiKey),
+    hasEtherscan: Boolean(creds.etherscanApiKey),
+    hasSolscan: Boolean(creds.solscanApiKey),
   };
 }
 
@@ -67,6 +78,8 @@ export function getMissingCredentialsMessage(feature: string, requiredCreds: str
       binance: 'BINANCE_API_KEY and BINANCE_API_SECRET',
       coingecko: 'COINGECKO_API_KEY',
       coinmarketcap: 'COINMARKETCAP_API_KEY',
+      etherscan: 'ETHERSCAN_API_KEY',
+      solscan: 'SOLSCAN_API_KEY',
     };
     return envMap[c] ?? c;
   });

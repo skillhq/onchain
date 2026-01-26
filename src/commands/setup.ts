@@ -33,6 +33,8 @@ export function registerSetupCommand(program: Command, ctx: CliContext): void {
           configUpdates.binanceApiKey ? 'Binance' : null,
           configUpdates.coingeckoApiKey ? 'CoinGecko' : null,
           configUpdates.coinmarketcapApiKey ? 'CoinMarketCap' : null,
+          configUpdates.etherscanApiKey ? 'Etherscan' : null,
+          configUpdates.solscanApiKey ? 'Solscan' : null,
         ].filter(Boolean);
 
         if (apiKeys.length > 0) {

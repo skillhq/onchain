@@ -162,6 +162,7 @@ export function formatRelativeTime(timestamp: number): string {
  */
 export function formatChainName(chain: string): string {
   const chainNames: Record<string, string> = {
+    // DeBank chain identifiers
     eth: 'Ethereum',
     bsc: 'BNB Chain',
     polygon: 'Polygon',
@@ -190,6 +191,11 @@ export function formatChainName(chain: string): string {
     okc: 'OKC',
     heco: 'HECO',
     solana: 'Solana',
+    // Etherscan chain identifiers
+    ethereum: 'Ethereum',
+    arbitrum: 'Arbitrum',
+    optimism: 'Optimism',
+    avalanche: 'Avalanche',
   };
 
   return chainNames[chain] ?? chain.toUpperCase();

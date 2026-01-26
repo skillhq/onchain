@@ -124,6 +124,26 @@ export async function runSetupWizard(
       config.coinmarketcapApiKey = cmcKey;
     }
 
+    // Block Explorer APIs
+    console.log();
+    console.log(colors.accent('Block Explorer APIs'));
+    console.log(colors.muted('For transaction lookup (onchain tx <hash>)'));
+    console.log();
+
+    // Etherscan (works on multiple EVM chains)
+    const etherscanKey = await prompt.question(
+      `Etherscan API Key${existingConfig.etherscanApiKey ? ' (configured)' : ''}: `,
+    );
+    if (etherscanKey) {
+      config.etherscanApiKey = etherscanKey;
+    }
+
+    // Solscan (Solana)
+    const solscanKey = await prompt.question(`Solscan API Key${existingConfig.solscanApiKey ? ' (configured)' : ''}: `);
+    if (solscanKey) {
+      config.solscanApiKey = solscanKey;
+    }
+
     console.log();
     return config;
   } finally {

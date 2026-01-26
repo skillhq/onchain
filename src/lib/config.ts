@@ -13,6 +13,9 @@ export interface OnchainConfig {
   binanceApiSecret?: string;
   coingeckoApiKey?: string;
   coinmarketcapApiKey?: string;
+  // Block explorer APIs
+  etherscanApiKey?: string;
+  solscanApiKey?: string;
   timeoutMs?: number;
 }
 

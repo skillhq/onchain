@@ -1,6 +1,9 @@
 // Supported blockchain types
 export type ChainType = 'evm' | 'solana';
 
+// Etherscan-compatible chain identifiers
+export type EtherscanChain = 'ethereum' | 'polygon' | 'bsc' | 'arbitrum' | 'base' | 'optimism' | 'avalanche' | 'fantom';
+
 // Supported EVM chains (DeBank supported)
 export type EvmChain =
   | 'eth'
@@ -181,6 +184,56 @@ export interface PolymarketMarket {
   slug?: string;
 }
 
+// Detailed transaction info (for tx lookup)
+export interface TransactionDetail {
+  hash: string;
+  chain: EtherscanChain | 'solana';
+  blockNumber: number;
+  timestamp: number;
+  status: 'success' | 'failed' | 'pending';
+  from: string;
+  to: string | null;
+  value: string;
+  valueFormatted: number;
+  fee: {
+    amount: number;
+    symbol: string;
+    valueUsd?: number;
+  };
+  gasUsed?: number;
+  gasLimit?: number;
+  gasPrice?: string;
+  methodId?: string;
+  methodName?: string;
+  tokenTransfers?: TokenTransfer[];
+  internalTransactions?: InternalTransaction[];
+  explorerUrl?: string;
+}
+
+// Token transfer within a transaction
+export interface TokenTransfer {
+  tokenType: 'ERC20' | 'ERC721' | 'ERC1155' | 'SPL';
+  contractAddress: string;
+  from: string;
+  to: string;
+  tokenId?: string;
+  amount?: string;
+  amountFormatted?: number;
+  symbol?: string;
+  decimals?: number;
+}
+
+// Internal transaction (EVM)
+export interface InternalTransaction {
+  from: string;
+  to: string;
+  value: string;
+  valueFormatted: number;
+  type: string;
+  gasUsed?: number;
+  isError?: boolean;
+}
+
 // Result types (tagged unions for error handling)
 export type BalanceResult =
   | { success: true; balances: TokenBalance[]; totalValueUsd: number }
@@ -216,6 +269,14 @@ export type PolymarketResult = { success: true; markets: PolymarketMarket[] } | 
 
 export type PolymarketDetailResult = { success: true; market: PolymarketMarket } | { success: false; error: string };
 
+export type TransactionDetailResult =
+  | { success: true; transaction: TransactionDetail }
+  | { success: false; error: string };
+
+export type MultiChainTxSearchResult =
+  | { success: true; transaction: TransactionDetail; chain: EtherscanChain }
+  | { success: false; error: string; triedChains: EtherscanChain[] };
+
 // Client options
 export interface OnchainClientOptions {
   debankApiKey?: string;
@@ -227,5 +288,8 @@ export interface OnchainClientOptions {
   binanceApiSecret?: string;
   coingeckoApiKey?: string;
   coinmarketcapApiKey?: string;
+  // Block explorer APIs
+  etherscanApiKey?: string; // Works on most Etherscan-compatible explorers
+  solscanApiKey?: string;
   timeoutMs?: number;
 }

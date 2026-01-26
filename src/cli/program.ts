@@ -10,6 +10,7 @@ import { registerPortfolioCommand } from '../commands/portfolio.js';
 import { registerPriceCommand } from '../commands/price.js';
 import { registerSetupCommand } from '../commands/setup.js';
 import { registerTestCommand } from '../commands/test.js';
+import { registerTxCommand } from '../commands/tx.js';
 import type { CliContext } from './shared.js';
 
 const version = process.env.ONCHAIN_VERSION ?? '0.1.0';
@@ -37,6 +38,7 @@ export function createProgram(ctx: CliContext): Command {
   registerPortfolioCommand(program, ctx);
   registerPriceCommand(program, ctx);
   registerMarketsCommand(program, ctx);
+  registerTxCommand(program, ctx);
   registerCoinbaseCommands(program, ctx);
   registerBinanceCommands(program, ctx);
   registerPolymarketCommands(program, ctx);
