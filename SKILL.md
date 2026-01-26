@@ -1,6 +1,6 @@
 ---
 name: onchain
-description: CLI for crypto portfolio tracking, market data, and CEX history. Use when the user asks about crypto prices, wallet balances, portfolio values, Coinbase/Binance holdings, or Polymarket predictions.
+description: CLI for crypto portfolio tracking, market data, CEX history, and transaction lookups. Use when the user asks about crypto prices, wallet balances, portfolio values, Coinbase/Binance holdings, Polymarket predictions, or transaction details.
 ---
 
 # Onchain CLI
@@ -59,6 +59,33 @@ onchain tx <explorer-url>           # Paste block explorer URL directly
 ```
 
 Supports EVM chains (Ethereum, Polygon, Base, Arbitrum, Optimism, BSC, Avalanche, Fantom) and Solana. Accepts raw hashes or explorer URLs (etherscan.io, basescan.org, solscan.io, etc.).
+
+#### Example Output
+```
+Transaction Details
+
+✓ Status: SUCCESS
+  Hash:  0xd757...5f31
+  Chain: Base
+  Block: 41,310,593
+  Time:  Jan 26, 2026, 01:55 PM (4h ago)
+
+Addresses
+  From: 0xc4e7263dd870a29f1cfe438d1a7db48547b16888
+  To:   0xab98b760e5ad88521a97c0f87a3f6eef8c42641d
+
+Value & Fee
+  Value: 0 ETH
+  Fee:   3.62e-7 ETH
+  Gas:   96,893 / 249,604 (39%)
+
+Method
+  ID: 0x6a761202
+
+🔗 https://basescan.org/tx/0xd757...
+```
+
+**This output contains all available transaction data.** The CLI queries Etherscan/Solscan APIs directly - there is no additional data available from other sources.
 
 ### CEX Data
 
@@ -175,4 +202,29 @@ onchain --json price btc | jq '{price: .priceUsd, change24h: .priceChange24h}'
 
 # Check if market is bullish
 CHANGE=$(onchain --json markets | jq '.marketCapChange24h')
+
+# Get transaction details as JSON
+TX=$(onchain --json tx 0x... --chain base)
+echo $TX | jq '{status: .status, from: .from, to: .to, method: .methodId}'
 ```
+
+### Transaction Lookup Guidance
+
+**IMPORTANT: Trust the CLI output.** The `onchain tx` command queries Etherscan (EVM) or Solscan (Solana) APIs directly and returns all available data.
+
+**DO NOT:**
+- Use curl to hit Etherscan/Basescan APIs directly
+- Use `cast` or other CLI tools as "fallbacks"
+- Use WebFetch to scrape block explorer websites
+- Assume the CLI is missing data - it returns everything available
+
+**DO:**
+- Use `onchain tx <hash>` or `onchain tx <explorer-url>`
+- Use `--json` for structured data parsing
+- Interpret the output directly to answer user questions
+
+**Example interpretation:**
+```bash
+onchain tx 0x... --chain base
+```
+If output shows `Status: SUCCESS`, `From: 0x...`, `To: 0x...`, `Method ID: 0x6a761202` - that's a successful contract interaction. The method ID `0x6a761202` is `execTransaction` (Gnosis Safe). No additional lookups needed.
