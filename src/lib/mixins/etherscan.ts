@@ -8,9 +8,13 @@ import type {
   TransactionDetailResult,
 } from '../onchain-client-types.js';
 
-// Chain configuration for Etherscan-compatible APIs
+// Etherscan API v2 - single endpoint with chain IDs
+// https://docs.etherscan.io/v2-migration
+const ETHERSCAN_V2_API = 'https://api.etherscan.io/v2/api';
+
+// Chain configuration for Etherscan v2 API
 interface ChainConfig {
-  apiUrl: string;
+  chainId: number;
   explorerUrl: string;
   nativeSymbol: string;
   decimals: number;
@@ -18,49 +22,49 @@ interface ChainConfig {
 
 const CHAIN_CONFIG: Record<EtherscanChain, ChainConfig> = {
   ethereum: {
-    apiUrl: 'https://api.etherscan.io/api',
+    chainId: 1,
     explorerUrl: 'https://etherscan.io',
     nativeSymbol: 'ETH',
     decimals: 18,
   },
   polygon: {
-    apiUrl: 'https://api.polygonscan.com/api',
+    chainId: 137,
     explorerUrl: 'https://polygonscan.com',
-    nativeSymbol: 'MATIC',
+    nativeSymbol: 'POL',
     decimals: 18,
   },
   bsc: {
-    apiUrl: 'https://api.bscscan.com/api',
+    chainId: 56,
     explorerUrl: 'https://bscscan.com',
     nativeSymbol: 'BNB',
     decimals: 18,
   },
   arbitrum: {
-    apiUrl: 'https://api.arbiscan.io/api',
+    chainId: 42161,
     explorerUrl: 'https://arbiscan.io',
     nativeSymbol: 'ETH',
     decimals: 18,
   },
   base: {
-    apiUrl: 'https://api.basescan.org/api',
+    chainId: 8453,
     explorerUrl: 'https://basescan.org',
     nativeSymbol: 'ETH',
     decimals: 18,
   },
   optimism: {
-    apiUrl: 'https://api-optimistic.etherscan.io/api',
+    chainId: 10,
     explorerUrl: 'https://optimistic.etherscan.io',
     nativeSymbol: 'ETH',
     decimals: 18,
   },
   avalanche: {
-    apiUrl: 'https://api.snowtrace.io/api',
+    chainId: 43114,
     explorerUrl: 'https://snowtrace.io',
     nativeSymbol: 'AVAX',
     decimals: 18,
   },
   fantom: {
-    apiUrl: 'https://api.ftmscan.com/api',
+    chainId: 250,
     explorerUrl: 'https://ftmscan.com',
     nativeSymbol: 'FTM',
     decimals: 18,
@@ -130,15 +134,25 @@ export function withEtherscan<TBase extends AbstractConstructor<OnchainClientBas
       const config = CHAIN_CONFIG[chain];
       const urlParams = new URLSearchParams(params);
 
-      // Add API key if available
+      // Etherscan v2 API requires chainid parameter
+      urlParams.set('chainid', config.chainId.toString());
+
+      // API key is required for v2 API
       if (this.etherscanApiKey) {
         urlParams.set('apikey', this.etherscanApiKey);
       }
 
-      return `${config.apiUrl}?${urlParams.toString()}`;
+      return `${ETHERSCAN_V2_API}?${urlParams.toString()}`;
     }
 
     async getEvmTransaction(hash: string, chain: EtherscanChain): Promise<TransactionDetailResult> {
+      if (!this.etherscanApiKey) {
+        return {
+          success: false,
+          error: 'Etherscan API key not configured. Run `onchain setup` or set ETHERSCAN_API_KEY environment variable.',
+        };
+      }
+
       try {
         const config = CHAIN_CONFIG[chain];
 
@@ -223,9 +237,14 @@ export function withEtherscan<TBase extends AbstractConstructor<OnchainClientBas
         const feeAmount = Number(feeWei) / 10 ** config.decimals;
 
         // Determine status
+        // Pre-Byzantium transactions (before Oct 2017) don't have status field
+        // If receipt exists with blockNumber, transaction was included (success)
         let status: 'success' | 'failed' | 'pending' = 'pending';
         if (receipt?.status) {
           status = receipt.status === '0x1' ? 'success' : 'failed';
+        } else if (receipt?.blockNumber) {
+          // Pre-Byzantium: receipt exists means transaction succeeded
+          status = 'success';
         }
 
         // Extract method ID and name from input
