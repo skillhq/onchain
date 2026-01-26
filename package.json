@@ -1,6 +1,6 @@
 {
   "name": "@cyberdrk/onchain",
-  "version": "0.1.8",
+  "version": "0.1.9",
   "description": "CLI tool for crypto portfolio tracking, market data, and CEX history",
   "type": "module",
   "main": "dist/index.js",
