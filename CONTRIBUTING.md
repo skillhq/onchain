@@ -1,9 +1,9 @@
-# Contributing to @cyberdrk/onchain
+# Contributing to @arein/onchain
 
 ## Development Setup
 
 ```bash
-git clone https://github.com/cyberdrk/onchain.git
+git clone https://github.com/arein/onchain.git
 cd onchain
 pnpm install
 ```

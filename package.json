@@ -16,13 +16,13 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/cyberdrk/onchain.git"
+    "url": "git+https://github.com/arein/onchain.git"
   },
-  "homepage": "https://github.com/cyberdrk/onchain#readme",
+  "homepage": "https://github.com/arein/onchain#readme",
   "bugs": {
-    "url": "https://github.com/cyberdrk/onchain/issues"
+    "url": "https://github.com/arein/onchain/issues"
   },
-  "author": "cyberdrk",
+  "author": "arein",
   "license": "MIT",
   "keywords": [
     "crypto",
@@ -66,6 +66,7 @@
     "@types/node": "^25.0.0",
     "@vitest/coverage-v8": "^4.0.0",
     "oxlint": "^1.36.0",
+    "oxlint-tsgolint": "^0.11.0",
     "tsx": "^4.21.0",
     "typescript": "^5.9.0",
     "vitest": "^4.0.0"
