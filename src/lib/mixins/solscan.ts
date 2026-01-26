@@ -68,6 +68,19 @@ export function withSolscan<TBase extends AbstractConstructor<OnchainClientBase>
 
         if (!response.ok) {
           if (response.status === 401) {
+            // Try to get detailed error message from response
+            try {
+              const errorData = (await response.json()) as { error_message?: string };
+              if (errorData.error_message?.includes('upgrade')) {
+                return {
+                  success: false,
+                  error:
+                    'Solscan Pro API plan required for transaction lookup. Visit https://solscan.io/apis to upgrade.',
+                };
+              }
+            } catch {
+              // Ignore JSON parse errors
+            }
             return { success: false, error: 'Invalid Solscan API key' };
           }
           return { success: false, error: `Solscan API error: ${response.status}` };
