@@ -28,7 +28,7 @@ The core `OnchainClient` is composed using TypeScript mixins, each adding method
 ```
 OnchainClientBase (base class with shared utilities)
     ↓
-withCoinGecko → withCoinMarketCap → withDeBank → withHelius → withCoinbase → withBinance → withPolymarket
+withCoinGecko → withCoinMarketCap → withDeBank → withHelius → withCoinbase → withBinance → withPolymarket → withEtherscan → withSolscan
     ↓
 OnchainClient (final composed class)
 ```
@@ -81,4 +81,13 @@ When DeBank/Helius API keys aren't configured, the CLI can fall back to browser 
 
 Config files: `~/.config/onchain/config.json5` (global) or `./.onchainrc.json5` (local)
 
-Environment variables (override config): `DEBANK_API_KEY`, `HELIUS_API_KEY`, `COINBASE_API_KEY_ID`, `COINBASE_API_KEY_SECRET`, `BINANCE_API_KEY`, `BINANCE_API_SECRET`, `COINGECKO_API_KEY`, `COINMARKETCAP_API_KEY`
+Environment variables (override config): `DEBANK_API_KEY`, `HELIUS_API_KEY`, `COINBASE_API_KEY_ID`, `COINBASE_API_KEY_SECRET`, `BINANCE_API_KEY`, `BINANCE_API_SECRET`, `COINGECKO_API_KEY`, `COINMARKETCAP_API_KEY`, `ETHERSCAN_API_KEY`, `SOLSCAN_API_KEY`
+
+## Checklist for New Features
+
+When adding new commands or capabilities:
+
+1. **Update SKILL.md** - Add the new command to the appropriate section with usage examples
+2. **Update setup wizard** - If the feature requires API keys, add prompts to `src/commands/setup-wizard.ts`
+3. **Update credentials** - Add new API keys to `src/lib/credentials.ts` and `src/lib/config.ts`
+4. **Update this file** - Update the mixin chain diagram and environment variables list

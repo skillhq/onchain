@@ -50,6 +50,16 @@ onchain history [address]           # Transaction history
 onchain portfolio [address]         # Full portfolio with DeFi positions
 ```
 
+### Transaction Lookup
+
+```bash
+onchain tx <hash>                   # Lookup transaction details (auto-detects chain)
+onchain tx <hash> --chain base      # Specify chain explicitly
+onchain tx <explorer-url>           # Paste block explorer URL directly
+```
+
+Supports EVM chains (Ethereum, Polygon, Base, Arbitrum, Optimism, BSC, Avalanche, Fantom) and Solana. Accepts raw hashes or explorer URLs (etherscan.io, basescan.org, solscan.io, etc.).
+
 ### CEX Data
 
 ```bash
@@ -101,6 +111,8 @@ Config file: `~/.config/onchain/config.json5`
 |---------|---------|-------|
 | Market data | `COINGECKO_API_KEY` | Free tier works, Pro for higher limits |
 | Market fallback | `COINMARKETCAP_API_KEY` | Alternative market data source |
+| EVM tx lookup | `ETHERSCAN_API_KEY` | For `onchain tx` on EVM chains |
+| Solana tx lookup | `SOLSCAN_API_KEY` | For `onchain tx` on Solana |
 
 ## Examples
 
@@ -122,6 +134,12 @@ onchain portfolio main  # Uses saved wallet named "main"
 ### Get trending prediction markets
 ```bash
 onchain polymarket trending -n 5
+```
+
+### Lookup a transaction
+```bash
+onchain tx 0xd757e7e4cdb424e22319cbf63bbcfcd4b26c93ebef31d1458ab7d5e986375f31
+onchain tx https://basescan.org/tx/0x...  # Or paste explorer URL
 ```
 
 ### JSON output for scripts
