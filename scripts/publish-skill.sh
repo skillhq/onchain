@@ -61,7 +61,8 @@ if [[ "$VERSION" != "$CURRENT_VERSION" ]]; then
 fi
 
 # Publish to ClawdHub
-clawdhub publish . \
+# Note: --workdir is required to override clawdbot default workspace
+clawdhub --workdir "$PROJECT_DIR" publish . \
     --slug onchain \
     --name "Onchain CLI" \
     --version "$VERSION" \

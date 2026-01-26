@@ -7,6 +7,25 @@ description: CLI for crypto portfolio tracking, market data, and CEX history. Us
 
 CLI for crypto portfolio tracking, market data, and CEX history.
 
+## First-Time Setup (Required)
+
+Before using most features, users must configure their API keys:
+
+```bash
+onchain setup
+```
+
+This interactive wizard helps configure:
+- **Coinbase/Binance** - For CEX balances and trade history
+- **DeBank** - For EVM wallet data (Ethereum, Polygon, Arbitrum, etc.)
+- **Helius** - For Solana wallet data
+
+**Without setup**: Only `onchain price` and `onchain markets` work (using free CoinGecko tier).
+
+**Verify setup**: Run `onchain test` to check which providers are configured and working.
+
+**Agent note**: If a command fails with "not configured" or "API key required", guide the user to run `onchain setup` first, then `onchain test` to verify.
+
 ## Invocation
 
 ```
