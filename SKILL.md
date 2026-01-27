@@ -39,6 +39,9 @@ onchain <command>
 ```bash
 onchain price <token>         # Token price (btc, eth, sol, etc.)
 onchain markets               # Market overview with trending
+onchain search <query>        # Search tokens by name or symbol
+onchain gas                   # Current gas prices (Ethereum default)
+onchain gas --chain polygon   # Gas prices for other EVM chains
 ```
 
 ### Wallet Data
@@ -194,6 +197,19 @@ onchain polymarket trending --exclude sports # Filter out sports on-the-fly
 ```bash
 onchain tx 0xd757e7e4cdb424e22319cbf63bbcfcd4b26c93ebef31d1458ab7d5e986375f31
 onchain tx https://basescan.org/tx/0x...  # Or paste explorer URL
+```
+
+### Search for tokens
+```bash
+onchain search pepe               # Find tokens matching "pepe"
+onchain search "shiba inu" -l 5   # Limit to 5 results
+```
+
+### Check gas prices
+```bash
+onchain gas                   # Ethereum gas prices
+onchain gas --chain polygon   # Polygon gas prices
+onchain gas --json            # JSON output
 ```
 
 ### JSON output for scripts

@@ -1,6 +1,8 @@
 import type { AbstractConstructor, Mixin, OnchainClientBase } from '../onchain-client-base.js';
 import type {
   EtherscanChain,
+  GasEstimate,
+  GasEstimateResult,
   InternalTransaction,
   MultiChainTxSearchResult,
   TokenTransfer,
@@ -88,6 +90,7 @@ export interface EtherscanMethods {
   getEvmTokenTransfers(hash: string, chain: EtherscanChain): Promise<TokenTransfer[]>;
   getEvmInternalTransactions(hash: string, chain: EtherscanChain): Promise<InternalTransaction[]>;
   findEvmTransaction(hash: string, preferredChains?: EtherscanChain[]): Promise<MultiChainTxSearchResult>;
+  getGasEstimate(chain: EtherscanChain): Promise<GasEstimateResult>;
 }
 
 // Etherscan API response types
@@ -410,6 +413,59 @@ export function withEtherscan<TBase extends AbstractConstructor<OnchainClientBas
         error: `Transaction not found on any chain. Tried: ${triedChains.join(', ')}`,
         triedChains,
       };
+    }
+
+    async getGasEstimate(chain: EtherscanChain): Promise<GasEstimateResult> {
+      if (!this.etherscanApiKey) {
+        return {
+          success: false,
+          error: 'Etherscan API key not configured. Run `onchain setup` or set ETHERSCAN_API_KEY environment variable.',
+        };
+      }
+
+      try {
+        const url = this.buildEtherscanUrl(chain, {
+          module: 'gastracker',
+          action: 'gasoracle',
+        });
+
+        const response = await this.fetchWithTimeout(url);
+        if (!response.ok) {
+          return { success: false, error: `API error: ${response.status}` };
+        }
+
+        const data = (await response.json()) as {
+          status: string;
+          message: string;
+          result?: {
+            SafeGasPrice: string;
+            ProposeGasPrice: string;
+            FastGasPrice: string;
+            suggestBaseFee?: string;
+            gasUsedRatio?: string;
+          };
+        };
+
+        if (data.status !== '1' || !data.result) {
+          return { success: false, error: data.message || 'Failed to fetch gas estimate' };
+        }
+
+        const gas: GasEstimate = {
+          chain,
+          safeGasPrice: Number.parseFloat(data.result.SafeGasPrice),
+          proposeGasPrice: Number.parseFloat(data.result.ProposeGasPrice),
+          fastGasPrice: Number.parseFloat(data.result.FastGasPrice),
+          suggestBaseFee: data.result.suggestBaseFee ? Number.parseFloat(data.result.suggestBaseFee) : undefined,
+          gasUsedRatio: data.result.gasUsedRatio,
+        };
+
+        return { success: true, gas };
+      } catch (error) {
+        return {
+          success: false,
+          error: `Failed to fetch gas estimate: ${error instanceof Error ? error.message : String(error)}`,
+        };
+      }
     }
   }
 

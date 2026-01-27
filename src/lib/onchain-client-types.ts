@@ -317,6 +317,30 @@ export type MultiChainTxSearchResult =
   | { success: true; transaction: TransactionDetail; chain: EtherscanChain }
   | { success: false; error: string; triedChains: EtherscanChain[] };
 
+// Gas estimate data
+export interface GasEstimate {
+  chain: EtherscanChain;
+  safeGasPrice: number; // in gwei
+  proposeGasPrice: number; // standard gas price in gwei
+  fastGasPrice: number; // in gwei
+  suggestBaseFee?: number; // in gwei (EIP-1559 chains)
+  gasUsedRatio?: string; // comma-separated ratios
+}
+
+export type GasEstimateResult = { success: true; gas: GasEstimate } | { success: false; error: string };
+
+// Token search result
+export interface TokenSearchItem {
+  id: string;
+  symbol: string;
+  name: string;
+  marketCapRank?: number;
+  thumb?: string; // thumbnail image
+  large?: string; // large image
+}
+
+export type TokenSearchResult = { success: true; tokens: TokenSearchItem[] } | { success: false; error: string };
+
 // Client options
 export interface OnchainClientOptions {
   debankApiKey?: string;

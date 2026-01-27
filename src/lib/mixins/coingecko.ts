@@ -1,5 +1,13 @@
 import type { AbstractConstructor, Mixin, OnchainClientBase } from '../onchain-client-base.js';
-import type { MarketOverview, MarketResult, PriceResult, PricesResult, TokenPrice } from '../onchain-client-types.js';
+import type {
+  MarketOverview,
+  MarketResult,
+  PriceResult,
+  PricesResult,
+  TokenPrice,
+  TokenSearchItem,
+  TokenSearchResult,
+} from '../onchain-client-types.js';
 
 const COINGECKO_API_BASE = 'https://api.coingecko.com/api/v3';
 const COINGECKO_PRO_API_BASE = 'https://pro-api.coingecko.com/api/v3';
@@ -49,6 +57,7 @@ export interface CoinGeckoMethods {
   getTokenPrices(tokenIdsOrSymbols: string[]): Promise<PricesResult>;
   getMarketOverview(): Promise<MarketResult>;
   getTrendingTokens(): Promise<PricesResult>;
+  searchTokens(query: string, limit?: number): Promise<TokenSearchResult>;
 }
 
 interface CoinGeckoMarketData {
@@ -319,6 +328,47 @@ export function withCoinGecko<TBase extends AbstractConstructor<OnchainClientBas
         return {
           success: false,
           error: `Failed to fetch trending tokens: ${error instanceof Error ? error.message : String(error)}`,
+        };
+      }
+    }
+
+    async searchTokens(query: string, limit = 10): Promise<TokenSearchResult> {
+      try {
+        const url = `${this.getApiBase()}/search?query=${encodeURIComponent(query)}`;
+
+        const response = await this.fetchWithTimeout(url, {
+          headers: this.getApiHeaders(),
+        });
+
+        if (!response.ok) {
+          return { success: false, error: `CoinGecko API error: ${response.status}` };
+        }
+
+        const data = (await response.json()) as {
+          coins: Array<{
+            id: string;
+            symbol: string;
+            name: string;
+            market_cap_rank?: number;
+            thumb?: string;
+            large?: string;
+          }>;
+        };
+
+        const tokens: TokenSearchItem[] = data.coins.slice(0, limit).map((coin) => ({
+          id: coin.id,
+          symbol: coin.symbol.toUpperCase(),
+          name: coin.name,
+          marketCapRank: coin.market_cap_rank,
+          thumb: coin.thumb,
+          large: coin.large,
+        }));
+
+        return { success: true, tokens };
+      } catch (error) {
+        return {
+          success: false,
+          error: `Failed to search tokens: ${error instanceof Error ? error.message : String(error)}`,
         };
       }
     }
