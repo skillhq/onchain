@@ -17,13 +17,13 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/arein/onchain.git"
+    "url": "git+https://github.com/cyberdrk305/onchain.git"
   },
-  "homepage": "https://github.com/arein/onchain#readme",
+  "homepage": "https://github.com/cyberdrk305/onchain#readme",
   "bugs": {
-    "url": "https://github.com/arein/onchain/issues"
+    "url": "https://github.com/cyberdrk305/onchain/issues"
   },
-  "author": "arein",
+  "author": "cyberdrk305",
   "license": "MIT",
   "keywords": [
     "crypto",
