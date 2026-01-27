@@ -62,11 +62,13 @@ fi
 
 # Publish to ClawdHub
 # Note: --workdir is required to override clawdbot default workspace
+TAGS="latest,crypto,blockchain,portfolio,defi,wallet,prices,bitcoin,ethereum,solana,polymarket,coinbase,binance,trading"
+
 clawdhub --workdir "$PROJECT_DIR" publish . \
     --slug onchain \
     --name "Onchain CLI" \
     --version "$VERSION" \
-    --tags latest \
+    --tags "$TAGS" \
     --changelog "$CHANGELOG"
 
 echo ""
