@@ -182,6 +182,40 @@ export interface PolymarketMarket {
   }>;
   category?: string;
   slug?: string;
+  tags?: string[];
+}
+
+export interface PolymarketTag {
+  id: string;
+  slug: string;
+  label: string;
+  eventCount?: number;
+}
+
+export interface PolymarketFilterOptions {
+  limit?: number;
+  excludeTags?: string[];
+  includeTags?: string[];
+  minVolume?: number;
+  minLiquidity?: number;
+}
+
+export interface PolymarketSentimentSignal {
+  question: string;
+  sentiment: 'bullish' | 'bearish' | 'neutral';
+  confidence: number; // 0-100, how strong the signal is
+  probability: number; // The relevant probability (e.g., "Yes" for bullish outcomes)
+  volume: number;
+  slug?: string;
+}
+
+export interface PolymarketSentiment {
+  topic: string;
+  overallSentiment: 'bullish' | 'bearish' | 'neutral' | 'mixed';
+  sentimentScore: number; // -100 (very bearish) to +100 (very bullish)
+  confidence: number; // 0-100, based on volume and signal strength
+  signals: PolymarketSentimentSignal[];
+  summary: string;
 }
 
 // Detailed transaction info (for tx lookup)
@@ -268,6 +302,12 @@ export type CexHistoryResult =
 export type PolymarketResult = { success: true; markets: PolymarketMarket[] } | { success: false; error: string };
 
 export type PolymarketDetailResult = { success: true; market: PolymarketMarket } | { success: false; error: string };
+
+export type PolymarketTagsResult = { success: true; tags: PolymarketTag[] } | { success: false; error: string };
+
+export type PolymarketSentimentResult =
+  | { success: true; sentiment: PolymarketSentiment }
+  | { success: false; error: string };
 
 export type TransactionDetailResult =
   | { success: true; transaction: TransactionDetail }

@@ -99,9 +99,34 @@ onchain binance history       # Binance trade history
 ### Prediction Markets
 
 ```bash
-onchain polymarket trending          # Trending markets
-onchain polymarket search <query>    # Search markets
+onchain polymarket tags              # List all available tags/categories
+onchain polymarket tags --popular    # Show popular tags by market count
+onchain polymarket trending          # Trending markets (respects config filters)
+onchain polymarket trending --all    # Show all markets (ignore config filters)
+onchain polymarket trending --exclude sports,nfl   # Exclude specific tags
+onchain polymarket trending --include crypto,ai    # Only show specific tags
+onchain polymarket search <query>    # Search markets (respects config filters)
 onchain polymarket view <slug>       # View market details
+onchain polymarket sentiment <topic> # Analyze market sentiment for a topic
+```
+
+**Sentiment analysis**: Analyzes prediction markets to determine bullish/bearish expectations:
+```bash
+onchain polymarket sentiment fed        # Fed rate expectations
+onchain polymarket sentiment bitcoin    # Bitcoin market sentiment
+onchain polymarket sentiment ai         # AI-related predictions
+onchain polymarket sentiment trump      # Political sentiment
+onchain polymarket sentiment fed --json # JSON output for agents
+```
+
+**Tag filtering**: Configure default excludes in `~/.config/onchain/config.json5`:
+```json5
+{
+  "polymarket": {
+    "excludeTags": ["sports", "nfl", "nba", "mlb"],
+    "includeTags": []  // empty = all non-excluded
+  }
+}
 ```
 
 ### Configuration
@@ -160,7 +185,9 @@ onchain portfolio main  # Uses saved wallet named "main"
 
 ### Get trending prediction markets
 ```bash
-onchain polymarket trending -n 5
+onchain polymarket trending -n 5             # Top 5 (respects config filters)
+onchain polymarket trending --all            # All markets, ignore config
+onchain polymarket trending --exclude sports # Filter out sports on-the-fly
 ```
 
 ### Lookup a transaction

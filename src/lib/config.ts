@@ -3,6 +3,11 @@ import { homedir } from 'node:os';
 import { dirname, join } from 'node:path';
 import JSON5 from 'json5';
 
+export interface PolymarketPreferences {
+  excludeTags?: string[]; // e.g., ["sports", "nfl", "nba"]
+  includeTags?: string[]; // e.g., ["crypto", "politics", "ai"]
+}
+
 export interface OnchainConfig {
   debankApiKey?: string;
   heliusApiKey?: string;
@@ -17,6 +22,8 @@ export interface OnchainConfig {
   etherscanApiKey?: string;
   solscanApiKey?: string;
   timeoutMs?: number;
+  // Polymarket preferences
+  polymarket?: PolymarketPreferences;
 }
 
 const DEFAULT_CONFIG: OnchainConfig = {

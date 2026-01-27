@@ -144,6 +144,45 @@ export async function runSetupWizard(
       config.solscanApiKey = solscanKey;
     }
 
+    // Polymarket Preferences
+    console.log();
+    console.log(colors.accent('Polymarket Preferences'));
+    console.log(colors.muted('Configure tag filters for polymarket trending/search commands.'));
+    console.log(colors.muted('Run `onchain polymarket tags --popular` to see available tags.'));
+    console.log();
+
+    const existingExcludes = existingConfig.polymarket?.excludeTags?.join(', ') || '';
+    const excludePrompt = existingExcludes
+      ? `Exclude tags (comma-separated, currently: ${existingExcludes}): `
+      : 'Exclude tags (comma-separated, e.g., sports,nfl,nba): ';
+    const excludeInput = await prompt.question(excludePrompt);
+
+    if (excludeInput) {
+      const excludeTags = excludeInput
+        .split(',')
+        .map((t) => t.trim().toLowerCase())
+        .filter(Boolean);
+      if (excludeTags.length > 0) {
+        config.polymarket = { ...config.polymarket, excludeTags };
+      }
+    }
+
+    const existingIncludes = existingConfig.polymarket?.includeTags?.join(', ') || '';
+    const includePrompt = existingIncludes
+      ? `Include only tags (comma-separated, currently: ${existingIncludes}): `
+      : 'Include only tags (comma-separated, leave empty for all): ';
+    const includeInput = await prompt.question(includePrompt);
+
+    if (includeInput) {
+      const includeTags = includeInput
+        .split(',')
+        .map((t) => t.trim().toLowerCase())
+        .filter(Boolean);
+      if (includeTags.length > 0) {
+        config.polymarket = { ...config.polymarket, includeTags };
+      }
+    }
+
     console.log();
     return config;
   } finally {

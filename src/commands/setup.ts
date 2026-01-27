@@ -43,6 +43,18 @@ export function registerSetupCommand(program: Command, ctx: CliContext): void {
           console.log();
         }
 
+        // Show Polymarket preferences if configured
+        if (configUpdates.polymarket) {
+          console.log(colors.accent('Polymarket preferences:'));
+          if (configUpdates.polymarket.excludeTags?.length) {
+            console.log(`  Exclude tags: ${configUpdates.polymarket.excludeTags.join(', ')}`);
+          }
+          if (configUpdates.polymarket.includeTags?.length) {
+            console.log(`  Include tags: ${configUpdates.polymarket.includeTags.join(', ')}`);
+          }
+          console.log();
+        }
+
         console.log(colors.muted('Run `onchain config` to view your configuration.'));
       } catch (error) {
         if ((error as NodeJS.ErrnoException).code === 'ERR_USE_AFTER_CLOSE') {
