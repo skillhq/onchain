@@ -83,6 +83,23 @@ Config files: `~/.config/onchain/config.json5` (global) or `./.onchainrc.json5` 
 
 Environment variables (override config): `DEBANK_API_KEY`, `HELIUS_API_KEY`, `COINBASE_API_KEY_ID`, `COINBASE_API_KEY_SECRET`, `BINANCE_API_KEY`, `BINANCE_API_SECRET`, `COINGECKO_API_KEY`, `COINMARKETCAP_API_KEY`, `ETHERSCAN_API_KEY`, `SOLSCAN_API_KEY`
 
+## Releasing
+
+**IMPORTANT:** When any code changes are made (not just `*.md` files), you MUST release a new version:
+
+1. **Bump version** in `package.json` (use semver: patch for fixes, minor for features, major for breaking changes)
+2. **Commit** the version bump
+3. **Create git tag**: `git tag v<version>` (e.g., `git tag v0.2.0`)
+4. **Push the tag**: `git push origin v<version>`
+
+This triggers the npm release via GitHub Actions. Always do this after pushing code changes.
+
+```bash
+# Example release flow after code changes
+pnpm version patch  # or minor/major - bumps package.json and creates tag
+git push && git push --tags
+```
+
 ## Checklist for New Features
 
 When adding new commands or capabilities:
@@ -91,3 +108,4 @@ When adding new commands or capabilities:
 2. **Update setup wizard** - If the feature requires API keys or preferences, add prompts to `src/cli/setup-wizard.ts`
 3. **Update credentials** - Add new API keys to `src/lib/credentials.ts` and `src/lib/config.ts`
 4. **Update this file** - Update the mixin chain diagram and environment variables list
+5. **Release** - Bump version, tag, and push (see Releasing section above)
