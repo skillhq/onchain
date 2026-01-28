@@ -112,6 +112,13 @@ export function withBinance<TBase extends AbstractConstructor<OnchainClientBase>
         });
 
         if (!response.ok) {
+          // Handle geo-restriction error gracefully
+          if (response.status === 451) {
+            return {
+              success: false,
+              error: 'Binance API unavailable in your region (geo-restricted)',
+            };
+          }
           const errorText = await response.text();
           return { success: false, error: `Binance API error: ${response.status} - ${errorText}` };
         }
