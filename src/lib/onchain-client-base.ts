@@ -19,6 +19,7 @@ export abstract class OnchainClientBase {
   protected coinmarketcapApiKey?: string;
   protected etherscanApiKey?: string;
   protected solscanApiKey?: string;
+  protected walletConnectProjectId?: string;
   protected timeoutMs?: number;
 
   constructor(options: OnchainClientOptions = {}) {
@@ -32,6 +33,7 @@ export abstract class OnchainClientBase {
     this.coinmarketcapApiKey = options.coinmarketcapApiKey;
     this.etherscanApiKey = options.etherscanApiKey;
     this.solscanApiKey = options.solscanApiKey;
+    this.walletConnectProjectId = options.walletConnectProjectId;
     this.timeoutMs = options.timeoutMs;
   }
 

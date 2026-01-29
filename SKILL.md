@@ -141,6 +141,21 @@ onchain config wallet add <name> <address>
 onchain config wallet set-default <name>
 ```
 
+### Wallet Connectivity (WalletConnect)
+
+Connect mobile wallets (MetaMask, Rainbow, etc.) to send transactions:
+
+```bash
+onchain wallet connect              # Show QR code, connect wallet
+onchain wallet connect --chain base # Connect on specific EVM chain
+onchain wallet status               # Check connection status
+onchain wallet send <to> <amount>   # Send ETH/native token
+onchain wallet send <to> <amount> --chain polygon           # Send on Polygon
+onchain wallet send <to> <amount> --token 0xUSDC --decimals 6  # Send ERC-20
+onchain wallet switch base          # Switch EVM chain
+onchain wallet disconnect           # Disconnect wallet
+```
+
 ## Global Options
 
 - `--json` - Output as JSON (agent-friendly)
@@ -168,6 +183,7 @@ Config file: `~/.config/onchain/config.json5`
 | Market fallback | `COINMARKETCAP_API_KEY` | Alternative market data source |
 | EVM tx lookup | `ETHERSCAN_API_KEY` | For `onchain tx` on EVM chains |
 | Solana tx lookup | `SOLSCAN_API_KEY` | For `onchain tx` on Solana |
+| Wallet connect | `WALLETCONNECT_PROJECT_ID` | For `onchain wallet` commands ([Get ID](https://cloud.walletconnect.com/)) |
 
 ## Examples
 

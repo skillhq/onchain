@@ -13,6 +13,8 @@ export interface ResolvedCredentials {
   // Block explorer APIs
   etherscanApiKey?: string;
   solscanApiKey?: string;
+  // WalletConnect
+  walletConnectProjectId?: string;
   warnings: string[];
 }
 
@@ -31,6 +33,7 @@ export function resolveCredentials(config: OnchainConfig, env: NodeJS.ProcessEnv
   const coinmarketcapApiKey = env.COINMARKETCAP_API_KEY ?? config.coinmarketcapApiKey;
   const etherscanApiKey = env.ETHERSCAN_API_KEY ?? config.etherscanApiKey;
   const solscanApiKey = env.SOLSCAN_API_KEY ?? config.solscanApiKey;
+  const walletConnectProjectId = env.WALLETCONNECT_PROJECT_ID ?? config.walletConnectProjectId;
 
   return {
     debankApiKey,
@@ -43,6 +46,7 @@ export function resolveCredentials(config: OnchainConfig, env: NodeJS.ProcessEnv
     coinmarketcapApiKey,
     etherscanApiKey,
     solscanApiKey,
+    walletConnectProjectId,
     warnings,
   };
 }
@@ -56,6 +60,7 @@ export function validateCredentials(creds: ResolvedCredentials): {
   hasCoinMarketCap: boolean;
   hasEtherscan: boolean;
   hasSolscan: boolean;
+  hasWalletConnect: boolean;
 } {
   return {
     hasDebank: Boolean(creds.debankApiKey),
@@ -66,6 +71,7 @@ export function validateCredentials(creds: ResolvedCredentials): {
     hasCoinMarketCap: Boolean(creds.coinmarketcapApiKey),
     hasEtherscan: Boolean(creds.etherscanApiKey),
     hasSolscan: Boolean(creds.solscanApiKey),
+    hasWalletConnect: Boolean(creds.walletConnectProjectId),
   };
 }
 
@@ -80,6 +86,7 @@ export function getMissingCredentialsMessage(feature: string, requiredCreds: str
       coinmarketcap: 'COINMARKETCAP_API_KEY',
       etherscan: 'ETHERSCAN_API_KEY',
       solscan: 'SOLSCAN_API_KEY',
+      walletconnect: 'WALLETCONNECT_PROJECT_ID',
     };
     return envMap[c] ?? c;
   });

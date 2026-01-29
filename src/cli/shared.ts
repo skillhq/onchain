@@ -150,6 +150,7 @@ export function createCliContext(normalizedArgs: string[], env: NodeJS.ProcessEn
       coinmarketcapApiKey: creds.coinmarketcapApiKey,
       etherscanApiKey: creds.etherscanApiKey,
       solscanApiKey: creds.solscanApiKey,
+      walletConnectProjectId: creds.walletConnectProjectId,
       timeoutMs: config.timeoutMs,
     };
   }

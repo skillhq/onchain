@@ -13,6 +13,7 @@ import { registerSearchCommand } from '../commands/search.js';
 import { registerSetupCommand } from '../commands/setup.js';
 import { registerTestCommand } from '../commands/test.js';
 import { registerTxCommand } from '../commands/tx.js';
+import { registerWalletCommand } from '../commands/wallet.js';
 import type { CliContext } from './shared.js';
 
 const version = process.env.ONCHAIN_VERSION ?? '0.1.0';
@@ -46,6 +47,7 @@ export function createProgram(ctx: CliContext): Command {
   registerCoinbaseCommands(program, ctx);
   registerBinanceCommands(program, ctx);
   registerPolymarketCommands(program, ctx);
+  registerWalletCommand(program, ctx);
   registerSetupCommand(program, ctx);
   registerConfigCommand(program, ctx);
   registerTestCommand(program, ctx);

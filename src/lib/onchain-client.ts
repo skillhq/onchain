@@ -7,6 +7,7 @@ import { type EtherscanMethods, withEtherscan } from './mixins/etherscan.js';
 import { type HeliusMethods, withHelius } from './mixins/helius.js';
 import { type PolymarketMethods, withPolymarket } from './mixins/polymarket.js';
 import { type SolscanMethods, withSolscan } from './mixins/solscan.js';
+import { type WalletConnectMethods, withWalletConnect } from './mixins/walletconnect.js';
 import type { AbstractConstructor } from './onchain-client-base.js';
 import { OnchainClientBase } from './onchain-client-base.js';
 
@@ -19,13 +20,16 @@ type OnchainClientInstance = OnchainClientBase &
   BinanceMethods &
   PolymarketMethods &
   EtherscanMethods &
-  SolscanMethods;
+  SolscanMethods &
+  WalletConnectMethods;
 
 // Compose all mixins
-const MixedOnchainClient = withSolscan(
-  withEtherscan(
-    withPolymarket(
-      withBinance(withCoinbase(withHelius(withDeBank(withCoinMarketCap(withCoinGecko(OnchainClientBase)))))),
+const MixedOnchainClient = withWalletConnect(
+  withSolscan(
+    withEtherscan(
+      withPolymarket(
+        withBinance(withCoinbase(withHelius(withDeBank(withCoinMarketCap(withCoinGecko(OnchainClientBase)))))),
+      ),
     ),
   ),
 ) as AbstractConstructor<OnchainClientInstance>;

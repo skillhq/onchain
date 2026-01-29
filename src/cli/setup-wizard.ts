@@ -144,6 +144,20 @@ export async function runSetupWizard(
       config.solscanApiKey = solscanKey;
     }
 
+    // WalletConnect
+    console.log();
+    console.log(colors.accent('WalletConnect'));
+    console.log(colors.muted('For wallet connectivity (send transactions via mobile wallets)'));
+    console.log(colors.muted('Get a free Project ID at https://cloud.walletconnect.com/'));
+    console.log();
+
+    const walletConnectProjectId = await prompt.question(
+      `WalletConnect Project ID${existingConfig.walletConnectProjectId ? ' (configured)' : ''}: `,
+    );
+    if (walletConnectProjectId) {
+      config.walletConnectProjectId = walletConnectProjectId;
+    }
+
     // Polymarket Preferences
     console.log();
     console.log(colors.accent('Polymarket Preferences'));

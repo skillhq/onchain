@@ -21,6 +21,8 @@ export interface OnchainConfig {
   // Block explorer APIs
   etherscanApiKey?: string;
   solscanApiKey?: string;
+  // WalletConnect
+  walletConnectProjectId?: string;
   timeoutMs?: number;
   // Polymarket preferences
   polymarket?: PolymarketPreferences;

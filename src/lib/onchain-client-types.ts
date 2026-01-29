@@ -355,5 +355,7 @@ export interface OnchainClientOptions {
   // Block explorer APIs
   etherscanApiKey?: string; // Works on most Etherscan-compatible explorers
   solscanApiKey?: string;
+  // WalletConnect
+  walletConnectProjectId?: string;
   timeoutMs?: number;
 }
