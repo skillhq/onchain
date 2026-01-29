@@ -45,9 +45,9 @@ export function withWalletConnect<TBase extends AbstractConstructor<OnchainClien
   Base: TBase,
 ): Mixin<TBase, WalletConnectMethods> {
   abstract class WalletConnectMixin extends Base implements WalletConnectMethods {
-    private signClient: SignClient | null = null;
+    private signClient: InstanceType<typeof SignClient> | null = null;
 
-    private async getSignClient(): Promise<SignClient> {
+    private async getSignClient(): Promise<InstanceType<typeof SignClient>> {
       if (this.signClient) {
         return this.signClient;
       }

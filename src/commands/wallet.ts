@@ -186,7 +186,7 @@ export function registerWalletCommand(program: Command, ctx: CliContext): void {
 
   wallet
     .command('send')
-    .description('Send tokens to an address')
+    .description('Send native currency (ETH/MATIC/etc.) or tokens to an address')
     .argument('<to>', 'Recipient address')
     .argument('<amount>', 'Amount to send')
     .option('--chain <chain>', 'EVM chain (ethereum, polygon, base, etc.)')
@@ -209,11 +209,36 @@ export function registerWalletCommand(program: Command, ctx: CliContext): void {
         const output = ctx.getOutput();
         const colors = ctx.colors;
 
+        // First check wallet status to show user info
+        const status = await client.walletStatus();
+        if (!status.success || !status.connected) {
+          if (cmdOpts.json || output.json) {
+            ctx.outputJson({ success: false, error: 'No wallet connected. Run `onchain wallet connect` first.' });
+          } else {
+            console.error(`${ctx.p('err')}No wallet connected. Run \`onchain wallet connect\` first.`);
+          }
+          process.exit(1);
+        }
+
         // Auto-detect chain type from address if not specified
         const useSolana = cmdOpts.solana || (!cmdOpts.chain && isSolanaAddress(to));
 
         if (useSolana) {
           // Solana transfer
+          const tokenDesc = cmdOpts.token ? `SPL token ${cmdOpts.token.slice(0, 8)}...` : 'SOL';
+
+          if (!(cmdOpts.json || output.json)) {
+            console.log();
+            console.log(colors.section('Sending Transaction'));
+            console.log();
+            console.log(`  From:   ${colors.accent(status.address)} (${status.walletName ?? 'Wallet'})`);
+            console.log(`  To:     ${to}`);
+            console.log(`  Amount: ${amount} ${tokenDesc}`);
+            console.log();
+            console.log(colors.muted(`  Approve this transaction in ${status.walletName ?? 'your wallet'}...`));
+            console.log();
+          }
+
           const result = await client.walletSendSolana({
             to,
             amount,
@@ -235,15 +260,43 @@ export function registerWalletCommand(program: Command, ctx: CliContext): void {
             return;
           }
 
-          console.log();
           console.log(`${ctx.p('ok')}Transaction sent!`);
           console.log(`  Hash: ${colors.accent(result.txHash)}`);
           console.log(`  Explorer: https://solscan.io/tx/${result.txHash}`);
           console.log();
         } else {
           // EVM transfer
-          const { CHAIN_ID_MAP } = await import('../lib/walletconnect-types.js');
-          const chainId = cmdOpts.chain ? CHAIN_ID_MAP[cmdOpts.chain.toLowerCase()] : undefined;
+          const { CHAIN_ID_MAP, CHAIN_ID_TO_NAME } = await import('../lib/walletconnect-types.js');
+          const chainId = cmdOpts.chain ? CHAIN_ID_MAP[cmdOpts.chain.toLowerCase()] : status.chainId;
+          const chainName = chainId ? (CHAIN_ID_TO_NAME[chainId] ?? `Chain ${chainId}`) : 'Ethereum';
+
+          // Determine native currency symbol based on chain
+          const nativeCurrency: Record<number, string> = {
+            1: 'ETH',
+            137: 'MATIC',
+            42161: 'ETH',
+            10: 'ETH',
+            8453: 'ETH',
+            43114: 'AVAX',
+            56: 'BNB',
+            250: 'FTM',
+            100: 'xDAI',
+          };
+          const nativeSymbol = chainId ? (nativeCurrency[chainId] ?? 'ETH') : 'ETH';
+          const tokenDesc = cmdOpts.token ? `ERC-20 ${cmdOpts.token.slice(0, 8)}...` : nativeSymbol;
+
+          if (!(cmdOpts.json || output.json)) {
+            console.log();
+            console.log(colors.section('Sending Transaction'));
+            console.log();
+            console.log(`  From:   ${colors.accent(status.address)} (${status.walletName ?? 'Wallet'})`);
+            console.log(`  To:     ${to}`);
+            console.log(`  Amount: ${amount} ${tokenDesc}`);
+            console.log(`  Chain:  ${chainName}`);
+            console.log();
+            console.log(colors.muted(`  Approve this transaction in ${status.walletName ?? 'your wallet'}...`));
+            console.log();
+          }
 
           const result = await client.walletSendEvm({
             to,
