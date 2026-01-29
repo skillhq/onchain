@@ -1,4 +1,4 @@
-import SignClient from '@walletconnect/sign-client';
+import { SignClient } from '@walletconnect/sign-client';
 import qrcode from 'qrcode-terminal';
 import { encodeFunctionData, parseEther, parseUnits } from 'viem';
 import type { AbstractConstructor, Mixin, OnchainClientBase } from '../onchain-client-base.js';
