@@ -148,7 +148,7 @@ export async function runSetupWizard(
     console.log();
     console.log(colors.accent('WalletConnect'));
     console.log(colors.muted('For wallet connectivity (send transactions via mobile wallets)'));
-    console.log(colors.muted('Get a free Project ID at https://cloud.walletconnect.com/'));
+    console.log(colors.muted('Get a free Project ID at https://dashboard.walletconnect.com/'));
     console.log();
 
     const walletConnectProjectId = await prompt.question(

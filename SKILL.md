@@ -183,7 +183,7 @@ Config file: `~/.config/onchain/config.json5`
 | Market fallback | `COINMARKETCAP_API_KEY` | Alternative market data source |
 | EVM tx lookup | `ETHERSCAN_API_KEY` | For `onchain tx` on EVM chains |
 | Solana tx lookup | `SOLSCAN_API_KEY` | For `onchain tx` on Solana |
-| Wallet connect | `WALLETCONNECT_PROJECT_ID` | For `onchain wallet` commands ([Get ID](https://cloud.walletconnect.com/)) |
+| Wallet connect | `WALLETCONNECT_PROJECT_ID` | For `onchain wallet` commands ([Get ID](https://dashboard.walletconnect.com/)) |
 
 ## Examples
 
