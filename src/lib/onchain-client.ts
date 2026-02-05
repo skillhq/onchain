@@ -5,6 +5,7 @@ import { type CoinMarketCapMethods, withCoinMarketCap } from './mixins/coinmarke
 import { type DeBankMethods, withDeBank } from './mixins/debank.js';
 import { type EtherscanMethods, withEtherscan } from './mixins/etherscan.js';
 import { type HeliusMethods, withHelius } from './mixins/helius.js';
+import { type NansenMethods, withNansen } from './mixins/nansen.js';
 import { type PolymarketMethods, withPolymarket } from './mixins/polymarket.js';
 import { type SolscanMethods, withSolscan } from './mixins/solscan.js';
 import { type WalletConnectMethods, withWalletConnect } from './mixins/walletconnect.js';
@@ -21,14 +22,17 @@ type OnchainClientInstance = OnchainClientBase &
   PolymarketMethods &
   EtherscanMethods &
   SolscanMethods &
-  WalletConnectMethods;
+  WalletConnectMethods &
+  NansenMethods;
 
 // Compose all mixins
-const MixedOnchainClient = withWalletConnect(
-  withSolscan(
-    withEtherscan(
-      withPolymarket(
-        withBinance(withCoinbase(withHelius(withDeBank(withCoinMarketCap(withCoinGecko(OnchainClientBase)))))),
+const MixedOnchainClient = withNansen(
+  withWalletConnect(
+    withSolscan(
+      withEtherscan(
+        withPolymarket(
+          withBinance(withCoinbase(withHelius(withDeBank(withCoinMarketCap(withCoinGecko(OnchainClientBase)))))),
+        ),
       ),
     ),
   ),

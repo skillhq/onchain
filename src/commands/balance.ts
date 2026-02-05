@@ -3,7 +3,7 @@ import type { CliContext } from '../cli/shared.js';
 import { isAgentBrowserAvailable, scrapeDebankProfile, scrapeSolscanProfile } from '../lib/browser-scraper.js';
 import { validateCredentials } from '../lib/credentials.js';
 import { OnchainClient } from '../lib/onchain-client.js';
-import type { EvmChain, TokenBalance } from '../lib/onchain-client-types.js';
+import type { EvmChain, SupportedChain, TokenBalance } from '../lib/onchain-client-types.js';
 import { isEvmAddress, isSolanaAddress } from '../lib/utils/address.js';
 import { formatChainName, formatTokenAmount, formatUsd } from '../lib/utils/formatters.js';
 
@@ -42,17 +42,66 @@ export function registerBalanceCommand(program: Command, ctx: CliContext): void 
         const creds = ctx.resolveCredentials();
         const validation = validateCredentials(creds);
 
+        // Initialize client to check for Nansen availability
+        const client = new OnchainClient(clientOpts);
+        const useNansen = client.isNansenAvailable();
         const hasApiKey = chainType === 'evm' ? validation.hasDebank : validation.hasHelius;
-        const useBrowser = cmdOpts.browser || !hasApiKey;
+        const useBrowser = cmdOpts.browser || (!useNansen && !hasApiKey);
 
         const output = ctx.getOutput();
         const colors = ctx.colors;
 
         let balances: TokenBalance[] = [];
         let totalValueUsd = 0;
+        let source: 'nansen' | 'api' | 'browser' = 'api';
 
-        if (useBrowser) {
-          // Try browser scraping
+        if (useNansen && !cmdOpts.browser) {
+          // Use Nansen CLI (preferred provider)
+          source = 'nansen';
+          const chain: SupportedChain = chainType === 'evm' ? ((cmdOpts.chain as EvmChain) ?? 'eth') : 'solana';
+
+          const result = await client.getNansenBalances(address, chain);
+
+          if (result.success) {
+            balances = result.balances;
+            totalValueUsd = result.totalValueUsd;
+          } else {
+            // Fall back to API if Nansen fails
+            console.error(colors.muted(`Nansen failed: ${result.error}, falling back to API...`));
+            source = 'api';
+          }
+        }
+
+        // Use API fallback if Nansen not available or failed
+        if (source === 'api' && !useBrowser) {
+          if (chainType === 'evm') {
+            const chains = cmdOpts.chain ? [cmdOpts.chain as EvmChain] : undefined;
+            const result = await client.getEvmBalances(address, chains);
+
+            if (!result.success) {
+              console.error(`${ctx.p('err')}${result.error}`);
+              process.exit(1);
+            }
+
+            balances = result.balances;
+            totalValueUsd = result.totalValueUsd;
+          } else if (chainType === 'solana') {
+            const result = await client.getSolanaBalances(address);
+
+            if (!result.success) {
+              console.error(`${ctx.p('err')}${result.error}`);
+              process.exit(1);
+            }
+
+            balances = result.balances;
+            totalValueUsd = result.totalValueUsd;
+          }
+        }
+
+        // Use browser scraping as last resort
+        if (useBrowser || (source === 'api' && balances.length === 0 && !hasApiKey)) {
+          source = 'browser';
+
           if (!isAgentBrowserAvailable()) {
             const apiKeyName = chainType === 'evm' ? 'DEBANK_API_KEY' : 'HELIUS_API_KEY';
             console.error(
@@ -86,32 +135,6 @@ export function registerBalanceCommand(program: Command, ctx: CliContext): void 
             valueUsd: b.valueUsd,
           }));
           totalValueUsd = scrapeResult.totalValueUsd;
-        } else {
-          // Use API
-          const client = new OnchainClient(clientOpts);
-
-          if (chainType === 'evm') {
-            const chains = cmdOpts.chain ? [cmdOpts.chain as EvmChain] : undefined;
-            const result = await client.getEvmBalances(address, chains);
-
-            if (!result.success) {
-              console.error(`${ctx.p('err')}${result.error}`);
-              process.exit(1);
-            }
-
-            balances = result.balances;
-            totalValueUsd = result.totalValueUsd;
-          } else if (chainType === 'solana') {
-            const result = await client.getSolanaBalances(address);
-
-            if (!result.success) {
-              console.error(`${ctx.p('err')}${result.error}`);
-              process.exit(1);
-            }
-
-            balances = result.balances;
-            totalValueUsd = result.totalValueUsd;
-          }
         }
 
         // Apply filters
@@ -127,15 +150,17 @@ export function registerBalanceCommand(program: Command, ctx: CliContext): void 
             chainType,
             totalValueUsd,
             balances: filteredBalances,
-            source: useBrowser ? 'browser' : 'api',
+            source,
           });
           return;
         }
 
         console.log();
-        console.log(colors.section(`Wallet Balance`));
+        console.log(colors.section('Wallet Balance'));
         console.log(colors.muted(`${address}`));
-        if (useBrowser) {
+        if (source === 'nansen') {
+          console.log(colors.muted('(via Nansen CLI)'));
+        } else if (source === 'browser') {
           console.log(colors.muted('(via browser scraping)'));
         }
         console.log();

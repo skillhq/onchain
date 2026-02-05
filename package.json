@@ -1,6 +1,6 @@
 {
   "name": "@skillhq/onchain",
-  "version": "0.5.1",
+  "version": "0.6.0",
   "description": "CLI tool for crypto portfolio tracking, market data, and CEX history",
   "type": "module",
   "main": "dist/index.js",

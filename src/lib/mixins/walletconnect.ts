@@ -1,8 +1,12 @@
+import { homedir } from 'node:os';
+import { join } from 'node:path';
+import { KeyValueStorage } from '@walletconnect/keyvaluestorage';
 import { SignClient } from '@walletconnect/sign-client';
 import qrcode from 'qrcode-terminal';
 import { encodeFunctionData, parseEther, parseUnits } from 'viem';
 import type { AbstractConstructor, Mixin, OnchainClientBase } from '../onchain-client-base.js';
 import { deleteSession, loadSession, saveSession } from '../walletconnect-session.js';
+
 import {
   CHAIN_ID_MAP,
   type ChainNamespace,
@@ -18,6 +22,9 @@ import {
   type WalletConnectSession,
   type WalletStatusResult,
 } from '../walletconnect-types.js';
+
+// Persistent storage path for WalletConnect sessions
+const WC_STORAGE_PATH = join(homedir(), '.config', 'onchain', 'walletconnect');
 
 // ERC-20 transfer ABI for token transfers
 const ERC20_TRANSFER_ABI = [
@@ -58,6 +65,9 @@ export function withWalletConnect<TBase extends AbstractConstructor<OnchainClien
         );
       }
 
+      // Use custom persistent storage for sessions across process restarts
+      const storage = new KeyValueStorage({ database: WC_STORAGE_PATH });
+
       this.signClient = await SignClient.init({
         projectId: this.walletConnectProjectId,
         metadata: {
@@ -66,6 +76,7 @@ export function withWalletConnect<TBase extends AbstractConstructor<OnchainClien
           url: 'https://github.com/cyberdrk305/onchain',
           icons: ['https://avatars.githubusercontent.com/u/37784886'],
         },
+        storage,
       });
 
       return this.signClient;
@@ -73,20 +84,39 @@ export function withWalletConnect<TBase extends AbstractConstructor<OnchainClien
 
     async walletConnect(options: WalletConnectOptions = {}): Promise<WalletConnectResult> {
       try {
-        // Check for existing session
-        const existingSession = loadSession();
-        if (existingSession) {
-          return {
-            success: true,
-            address: existingSession.address,
-            chainType: existingSession.chainType,
-            chainId: existingSession.chainId,
-            cluster: existingSession.cluster,
-            walletName: existingSession.walletName,
-          };
+        const client = await this.getSignClient();
+
+        // Check SignClient's own session storage first (sessions persist across restarts)
+        const activeSessions = client.session.getAll();
+        if (activeSessions.length > 0) {
+          const session = activeSessions[0];
+          // Extract account info from the session
+          const eip155Accounts = session.namespaces.eip155?.accounts;
+          if (eip155Accounts && eip155Accounts.length > 0) {
+            const [, chainIdStr, address] = eip155Accounts[0].split(':');
+            // Update our local cache
+            const wcSession: WalletConnectSession = {
+              topic: session.topic,
+              address,
+              chainType: 'eip155',
+              chainId: Number(chainIdStr),
+              expiry: session.expiry,
+              walletName: session.peer.metadata.name,
+              pairingTopic: session.pairingTopic,
+            };
+            saveSession(wcSession);
+            return {
+              success: true,
+              address,
+              chainType: 'eip155',
+              chainId: Number(chainIdStr),
+              walletName: session.peer.metadata.name,
+            };
+          }
         }
 
-        const client = await this.getSignClient();
+        // No active sessions - clear any stale local cache
+        deleteSession();
 
         // Build namespaces based on options
         const requiredNamespaces: Record<string, { chains: string[]; methods: string[]; events: string[] }> = {};
@@ -199,9 +229,18 @@ export function withWalletConnect<TBase extends AbstractConstructor<OnchainClien
       } catch (error) {
         // Clean up any partial state
         deleteSession();
+        let message: string;
+        if (error instanceof Error) {
+          message = error.message;
+        } else if (typeof error === 'object' && error !== null) {
+          const errObj = error as { message?: string; code?: number };
+          message = errObj.message || JSON.stringify(error);
+        } else {
+          message = String(error);
+        }
         return {
           success: false,
-          error: `WalletConnect error: ${error instanceof Error ? error.message : String(error)}`,
+          error: `WalletConnect error: ${message}`,
         };
       }
     }
@@ -317,7 +356,19 @@ export function withWalletConnect<TBase extends AbstractConstructor<OnchainClien
           chainType: 'eip155',
         };
       } catch (error) {
-        const message = error instanceof Error ? error.message : String(error);
+        let message: string;
+        if (error instanceof Error) {
+          message = error.message;
+        } else if (typeof error === 'object' && error !== null) {
+          // WalletConnect errors may be plain objects with code/message
+          const errObj = error as { code?: number; message?: string };
+          if (errObj.code === 0 && !errObj.message) {
+            return { success: false, error: 'Transaction rejected or timed out in wallet' };
+          }
+          message = errObj.message || JSON.stringify(error);
+        } else {
+          message = String(error);
+        }
 
         // Handle user rejection
         if (message.includes('rejected') || message.includes('denied') || message.includes('cancelled')) {

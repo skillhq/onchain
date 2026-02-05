@@ -28,10 +28,12 @@ The core `OnchainClient` is composed using TypeScript mixins, each adding method
 ```
 OnchainClientBase (base class with shared utilities)
     ↓
-withCoinGecko → withCoinMarketCap → withDeBank → withHelius → withCoinbase → withBinance → withPolymarket → withEtherscan → withSolscan → withWalletConnect
+withCoinGecko → withCoinMarketCap → withDeBank → withHelius → withCoinbase → withBinance → withPolymarket → withEtherscan → withSolscan → withWalletConnect → withNansen
     ↓
 OnchainClient (final composed class)
 ```
+
+**Note:** Nansen is a CLI wrapper (not an API client). When the `nansen` CLI is installed, it becomes the preferred provider for balance lookups, taking priority over DeBank/Helius APIs.
 
 Each mixin in `src/lib/mixins/` exports:
 - A methods interface (e.g., `CoinGeckoMethods`)

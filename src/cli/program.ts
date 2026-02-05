@@ -1,3 +1,6 @@
+import { readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { Command } from 'commander';
 import { registerBalanceCommand } from '../commands/balance.js';
 import { registerBinanceCommands } from '../commands/binance.js';
@@ -6,6 +9,7 @@ import { registerConfigCommand } from '../commands/config.js';
 import { registerGasCommand } from '../commands/gas.js';
 import { registerHistoryCommand } from '../commands/history.js';
 import { registerMarketsCommand } from '../commands/markets.js';
+import { registerNansenCommands } from '../commands/nansen.js';
 import { registerPolymarketCommands } from '../commands/polymarket.js';
 import { registerPortfolioCommand } from '../commands/portfolio.js';
 import { registerPriceCommand } from '../commands/price.js';
@@ -16,7 +20,26 @@ import { registerTxCommand } from '../commands/tx.js';
 import { registerWalletCommand } from '../commands/wallet.js';
 import type { CliContext } from './shared.js';
 
-const version = process.env.ONCHAIN_VERSION ?? '0.1.0';
+// Read version from package.json (works in both dev and built modes)
+function getPackageVersion(): string {
+  // Check env var first (set during binary build)
+  if (process.env.ONCHAIN_VERSION) {
+    return process.env.ONCHAIN_VERSION;
+  }
+  // Fall back to reading package.json
+  try {
+    const __dirname = dirname(fileURLToPath(import.meta.url));
+    // In dev: src/cli/program.ts -> ../../package.json
+    // In dist: dist/cli/program.js -> ../../package.json
+    const pkgPath = join(__dirname, '..', '..', 'package.json');
+    const pkg = JSON.parse(readFileSync(pkgPath, 'utf8')) as { version: string };
+    return pkg.version;
+  } catch {
+    return '0.0.0';
+  }
+}
+
+const version = getPackageVersion();
 const gitSha = process.env.ONCHAIN_GIT_SHA ?? '';
 
 export function createProgram(ctx: CliContext): Command {
@@ -47,6 +70,7 @@ export function createProgram(ctx: CliContext): Command {
   registerCoinbaseCommands(program, ctx);
   registerBinanceCommands(program, ctx);
   registerPolymarketCommands(program, ctx);
+  registerNansenCommands(program, ctx);
   registerWalletCommand(program, ctx);
   registerSetupCommand(program, ctx);
   registerConfigCommand(program, ctx);
