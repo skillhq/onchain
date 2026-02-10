@@ -48,11 +48,13 @@ onchain gas --chain polygon   # Gas prices for other EVM chains
 ### Wallet Data
 
 ```bash
-onchain balance [address]           # Token balances (auto-detects EVM/Solana)
-onchain balance --chain polygon     # Filter by chain
-onchain history [address]           # Transaction history
-onchain portfolio [address]         # Full portfolio with DeFi positions
+onchain balance <address>           # Token balances (auto-detects EVM/Solana)
+onchain balance <address> --chain polygon  # Filter by chain
+onchain history <address>           # Transaction history
+onchain portfolio <address>         # Full portfolio with DeFi positions
 ```
+
+**Address is required** — pass an EVM address (`0x...`) or a Solana address. There is no default wallet; you must always provide the address explicitly.
 
 ### Transaction Lookup
 
@@ -138,8 +140,7 @@ onchain polymarket sentiment fed --json # JSON output for agents
 ```bash
 onchain setup                 # Interactive setup wizard
 onchain config                # View current config
-onchain config wallet add <name> <address>
-onchain config wallet set-default <name>
+onchain config set <key> <value>  # Set config value (e.g., timeoutMs)
 ```
 
 ### Wallet Connectivity (WalletConnect)
@@ -206,7 +207,7 @@ onchain balance 0x1234...5678
 
 ### View portfolio with DeFi positions
 ```bash
-onchain portfolio main  # Uses saved wallet named "main"
+onchain portfolio 0x1234...5678
 ```
 
 ### Get trending prediction markets
@@ -257,14 +258,14 @@ This CLI is designed for agent use. Key patterns:
 
 1. **Always use `--json`** for programmatic access
 2. **Check exit codes** - 0 for success, 1 for error
-3. **Use saved wallets** - Configure once with `onchain setup`, reference by name
+3. **Always pass an address** - Wallet commands require an explicit address (no default wallet)
 4. **Rate limiting** - APIs have rate limits, add delays between rapid calls
 
 ### Example Agent Usage
 
 ```bash
-# Get portfolio value
-VALUE=$(onchain --json portfolio main | jq -r '.totalValueUsd')
+# Get portfolio value (address is required)
+VALUE=$(onchain --json portfolio 0x1234...5678 | jq -r '.totalValueUsd')
 
 # Get price with change
 onchain --json price btc | jq '{price: .priceUsd, change24h: .priceChange24h}'

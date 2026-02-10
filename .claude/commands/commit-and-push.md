@@ -21,7 +21,7 @@ Use `pnpm version <patch|minor|major> --no-git-tag-version` to bump the version 
 ### 4. Stage and commit all changes
 - Stage all modified files (be specific, avoid `git add -A`)
 - Create a commit with a clear message describing the changes
-- Include `Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>` in the commit
+- Include `Co-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>` in the commit
 
 ### 5. Create git tag
 After the commit succeeds, create a git tag:
