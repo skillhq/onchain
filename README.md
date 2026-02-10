@@ -1,16 +1,16 @@
-# @cyberdrk/onchain
+# @skillhq/onchain
 
 CLI for crypto portfolio tracking, market data, and CEX history. Designed for both human use and AI agent integration.
 
 ## Installation
 
 ```bash
-npm install -g @cyberdrk/onchain
+npm install -g @skillhq/onchain
 ```
 
 Or run directly with npx:
 ```bash
-npx @cyberdrk/onchain price btc
+npx @skillhq/onchain price btc
 ```
 
 ## Quick Start
@@ -77,10 +77,11 @@ Run `onchain setup` for interactive configuration, or set environment variables:
 
 | Feature | Environment Variable | Provider |
 |---------|---------------------|----------|
-| EVM wallets | `DEBANK_API_KEY` | [DeBank Cloud](https://cloud.debank.com/) |
-| Solana wallets | `HELIUS_API_KEY` | [Helius](https://helius.xyz/) |
+| EVM + Solana wallets | `ZERION_API_KEY` | [Zerion](https://zerion.io/api) (recommended) |
 | Coinbase | `COINBASE_API_KEY_ID` + `COINBASE_API_KEY_SECRET` | [Coinbase CDP](https://portal.cdp.coinbase.com/) |
 | Binance | `BINANCE_API_KEY` + `BINANCE_API_SECRET` | [Binance](https://www.binance.com/en/my/settings/api-management) |
+| EVM wallets (fallback) | `DEBANK_API_KEY` | [DeBank Cloud](https://cloud.debank.com/) |
+| Solana wallets (fallback) | `HELIUS_API_KEY` | [Helius](https://helius.xyz/) |
 | Market data | `COINGECKO_API_KEY` | [CoinGecko](https://www.coingecko.com/en/api) (optional) |
 | Market fallback | `COINMARKETCAP_API_KEY` | [CoinMarketCap](https://coinmarketcap.com/api/) (optional) |
 
@@ -116,9 +117,11 @@ Exit codes: `0` for success, `1` for errors.
 
 ## Supported Chains
 
-**EVM (via DeBank):** Ethereum, BNB Chain, Polygon, Arbitrum, Optimism, Avalanche, Base, zkSync Era, Linea, Scroll, Blast, Mantle, and 60+ more.
+**EVM + Solana (via Zerion):** Ethereum, BNB Chain, Polygon, Arbitrum, Optimism, Avalanche, Base, zkSync Era, Linea, Scroll, Blast, Mantle, Solana, and more. Single API key covers all chains.
 
-**Solana (via Helius):** Full mainnet support including SPL tokens and NFTs.
+**EVM (via DeBank, fallback):** Same EVM chains, requires separate DeBank API key.
+
+**Solana (via Helius, fallback):** Full mainnet support including SPL tokens and NFTs.
 
 ## Development
 
