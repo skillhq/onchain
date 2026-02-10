@@ -15,6 +15,8 @@ export interface ResolvedCredentials {
   solscanApiKey?: string;
   // WalletConnect
   walletConnectProjectId?: string;
+  // Zerion
+  zerionApiKey?: string;
   warnings: string[];
 }
 
@@ -34,6 +36,7 @@ export function resolveCredentials(config: OnchainConfig, env: NodeJS.ProcessEnv
   const etherscanApiKey = env.ETHERSCAN_API_KEY ?? config.etherscanApiKey;
   const solscanApiKey = env.SOLSCAN_API_KEY ?? config.solscanApiKey;
   const walletConnectProjectId = env.WALLETCONNECT_PROJECT_ID ?? config.walletConnectProjectId;
+  const zerionApiKey = env.ZERION_API_KEY ?? config.zerionApiKey;
 
   return {
     debankApiKey,
@@ -47,6 +50,7 @@ export function resolveCredentials(config: OnchainConfig, env: NodeJS.ProcessEnv
     etherscanApiKey,
     solscanApiKey,
     walletConnectProjectId,
+    zerionApiKey,
     warnings,
   };
 }
@@ -61,6 +65,7 @@ export function validateCredentials(creds: ResolvedCredentials): {
   hasEtherscan: boolean;
   hasSolscan: boolean;
   hasWalletConnect: boolean;
+  hasZerion: boolean;
 } {
   return {
     hasDebank: Boolean(creds.debankApiKey),
@@ -72,6 +77,7 @@ export function validateCredentials(creds: ResolvedCredentials): {
     hasEtherscan: Boolean(creds.etherscanApiKey),
     hasSolscan: Boolean(creds.solscanApiKey),
     hasWalletConnect: Boolean(creds.walletConnectProjectId),
+    hasZerion: Boolean(creds.zerionApiKey),
   };
 }
 
@@ -87,6 +93,7 @@ export function getMissingCredentialsMessage(feature: string, requiredCreds: str
       etherscan: 'ETHERSCAN_API_KEY',
       solscan: 'SOLSCAN_API_KEY',
       walletconnect: 'WALLETCONNECT_PROJECT_ID',
+      zerion: 'ZERION_API_KEY',
     };
     return envMap[c] ?? c;
   });

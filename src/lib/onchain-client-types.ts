@@ -357,5 +357,7 @@ export interface OnchainClientOptions {
   solscanApiKey?: string;
   // WalletConnect
   walletConnectProjectId?: string;
+  // Zerion (unified EVM + Solana portfolio & history)
+  zerionApiKey?: string;
   timeoutMs?: number;
 }

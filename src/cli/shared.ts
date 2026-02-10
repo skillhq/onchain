@@ -151,6 +151,7 @@ export function createCliContext(normalizedArgs: string[], env: NodeJS.ProcessEn
       etherscanApiKey: creds.etherscanApiKey,
       solscanApiKey: creds.solscanApiKey,
       walletConnectProjectId: creds.walletConnectProjectId,
+      zerionApiKey: creds.zerionApiKey,
       timeoutMs: config.timeoutMs,
     };
   }

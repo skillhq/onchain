@@ -9,6 +9,7 @@ import { type NansenMethods, withNansen } from './mixins/nansen.js';
 import { type PolymarketMethods, withPolymarket } from './mixins/polymarket.js';
 import { type SolscanMethods, withSolscan } from './mixins/solscan.js';
 import { type WalletConnectMethods, withWalletConnect } from './mixins/walletconnect.js';
+import { withZerion, type ZerionMethods } from './mixins/zerion.js';
 import type { AbstractConstructor } from './onchain-client-base.js';
 import { OnchainClientBase } from './onchain-client-base.js';
 
@@ -23,15 +24,18 @@ type OnchainClientInstance = OnchainClientBase &
   EtherscanMethods &
   SolscanMethods &
   WalletConnectMethods &
+  ZerionMethods &
   NansenMethods;
 
 // Compose all mixins
 const MixedOnchainClient = withNansen(
-  withWalletConnect(
-    withSolscan(
-      withEtherscan(
-        withPolymarket(
-          withBinance(withCoinbase(withHelius(withDeBank(withCoinMarketCap(withCoinGecko(OnchainClientBase)))))),
+  withZerion(
+    withWalletConnect(
+      withSolscan(
+        withEtherscan(
+          withPolymarket(
+            withBinance(withCoinbase(withHelius(withDeBank(withCoinMarketCap(withCoinGecko(OnchainClientBase)))))),
+          ),
         ),
       ),
     ),

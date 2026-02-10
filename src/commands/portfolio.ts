@@ -32,13 +32,13 @@ export function registerPortfolioCommand(program: Command, ctx: CliContext): voi
       const creds = ctx.resolveCredentials();
       const validation = validateCredentials(creds);
 
-      if (chainType === 'evm' && !validation.hasDebank) {
-        console.error(`${ctx.p('err')}${getMissingCredentialsMessage('EVM portfolio data', ['debank'])}`);
-        process.exit(1);
-      }
+      const hasChainApi = chainType === 'evm' ? validation.hasDebank : validation.hasHelius;
 
-      if (chainType === 'solana' && !validation.hasHelius) {
-        console.error(`${ctx.p('err')}${getMissingCredentialsMessage('Solana portfolio data', ['helius'])}`);
+      if (!validation.hasZerion && !hasChainApi) {
+        const requiredCreds = chainType === 'evm' ? ['zerion', 'debank'] : ['zerion', 'helius'];
+        console.error(
+          `${ctx.p('err')}${getMissingCredentialsMessage(`${chainType === 'evm' ? 'EVM' : 'Solana'} portfolio data`, requiredCreds)}`,
+        );
         process.exit(1);
       }
 
@@ -64,6 +64,10 @@ export function registerPortfolioCommand(program: Command, ctx: CliContext): voi
           estimatedValueUsd?: number;
         };
         totalValueUsd: number;
+        change24h?: {
+          absolute: number;
+          relative: number;
+        };
       }
 
       const portfolioData: PortfolioData = {
@@ -73,10 +77,13 @@ export function registerPortfolioCommand(program: Command, ctx: CliContext): voi
         totalValueUsd: 0,
       };
 
-      if (chainType === 'evm') {
-        // Fetch token balances
-        const balanceResult = await client.getEvmBalances(address);
+      let usedZerion = false;
+
+      // Try Zerion first (unified provider for any chain)
+      if (validation.hasZerion) {
+        const balanceResult = await client.getZerionBalances(address);
         if (balanceResult.success) {
+          usedZerion = true;
           portfolioData.tokens = {
             totalValueUsd: balanceResult.totalValueUsd,
             count: balanceResult.balances.length,
@@ -86,58 +93,91 @@ export function registerPortfolioCommand(program: Command, ctx: CliContext): voi
             })),
           };
           portfolioData.totalValueUsd += balanceResult.totalValueUsd;
-        }
 
-        // Fetch DeFi positions
-        const defiResult = await client.getEvmDefiPositions(address);
-        if (defiResult.success) {
-          // Group by protocol
-          const protocolTotals = new Map<string, number>();
-          for (const pos of defiResult.positions) {
-            const current = protocolTotals.get(pos.protocol) ?? 0;
-            protocolTotals.set(pos.protocol, current + (pos.totalValueUsd ?? 0));
+          // Fetch portfolio change data from Zerion
+          const portfolioResult = await client.getZerionPortfolio(address);
+          if (portfolioResult.success) {
+            portfolioData.change24h = {
+              absolute: portfolioResult.portfolio.absoluteChange24h,
+              relative: portfolioResult.portfolio.relativeChange24h,
+            };
+          }
+        } else if (hasChainApi) {
+          console.error(colors.muted(`Zerion failed: ${balanceResult.error}, falling back to API...`));
+        } else {
+          console.error(`${ctx.p('err')}${balanceResult.error}`);
+          process.exit(1);
+        }
+      }
+
+      // Fall back to DeBank/Helius if Zerion not used
+      if (!usedZerion) {
+        if (chainType === 'evm') {
+          // Fetch token balances
+          const balanceResult = await client.getEvmBalances(address);
+          if (balanceResult.success) {
+            portfolioData.tokens = {
+              totalValueUsd: balanceResult.totalValueUsd,
+              count: balanceResult.balances.length,
+              topHoldings: balanceResult.balances.slice(0, 5).map((b) => ({
+                symbol: b.symbol,
+                valueUsd: b.valueUsd,
+              })),
+            };
+            portfolioData.totalValueUsd += balanceResult.totalValueUsd;
           }
 
-          portfolioData.defi = {
-            totalValueUsd: defiResult.totalValueUsd,
-            positionCount: defiResult.positions.length,
-            protocols: Array.from(protocolTotals.entries())
-              .sort((a, b) => b[1] - a[1])
-              .slice(0, 5)
-              .map(([name, valueUsd]) => ({ name, valueUsd })),
-          };
-          portfolioData.totalValueUsd += defiResult.totalValueUsd;
-        }
+          // Fetch DeFi positions
+          const defiResult = await client.getEvmDefiPositions(address);
+          if (defiResult.success) {
+            // Group by protocol
+            const protocolTotals = new Map<string, number>();
+            for (const pos of defiResult.positions) {
+              const current = protocolTotals.get(pos.protocol) ?? 0;
+              protocolTotals.set(pos.protocol, current + (pos.totalValueUsd ?? 0));
+            }
 
-        // Fetch NFTs
-        const nftResult = await client.getEvmNfts(address);
-        if (nftResult.success) {
-          portfolioData.nfts = {
-            count: nftResult.nfts.length,
-            estimatedValueUsd: nftResult.totalEstimatedValueUsd,
-          };
-        }
-      } else if (chainType === 'solana') {
-        // Fetch token balances
-        const balanceResult = await client.getSolanaBalances(address);
-        if (balanceResult.success) {
-          portfolioData.tokens = {
-            totalValueUsd: balanceResult.totalValueUsd,
-            count: balanceResult.balances.length,
-            topHoldings: balanceResult.balances.slice(0, 5).map((b) => ({
-              symbol: b.symbol,
-              valueUsd: b.valueUsd,
-            })),
-          };
-          portfolioData.totalValueUsd += balanceResult.totalValueUsd;
-        }
+            portfolioData.defi = {
+              totalValueUsd: defiResult.totalValueUsd,
+              positionCount: defiResult.positions.length,
+              protocols: Array.from(protocolTotals.entries())
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 5)
+                .map(([name, valueUsd]) => ({ name, valueUsd })),
+            };
+            portfolioData.totalValueUsd += defiResult.totalValueUsd;
+          }
 
-        // Fetch NFTs
-        const nftResult = await client.getSolanaNfts(address);
-        if (nftResult.success) {
-          portfolioData.nfts = {
-            count: nftResult.nfts.length,
-          };
+          // Fetch NFTs
+          const nftResult = await client.getEvmNfts(address);
+          if (nftResult.success) {
+            portfolioData.nfts = {
+              count: nftResult.nfts.length,
+              estimatedValueUsd: nftResult.totalEstimatedValueUsd,
+            };
+          }
+        } else if (chainType === 'solana') {
+          // Fetch token balances
+          const balanceResult = await client.getSolanaBalances(address);
+          if (balanceResult.success) {
+            portfolioData.tokens = {
+              totalValueUsd: balanceResult.totalValueUsd,
+              count: balanceResult.balances.length,
+              topHoldings: balanceResult.balances.slice(0, 5).map((b) => ({
+                symbol: b.symbol,
+                valueUsd: b.valueUsd,
+              })),
+            };
+            portfolioData.totalValueUsd += balanceResult.totalValueUsd;
+          }
+
+          // Fetch NFTs
+          const nftResult = await client.getSolanaNfts(address);
+          if (nftResult.success) {
+            portfolioData.nfts = {
+              count: nftResult.nfts.length,
+            };
+          }
         }
       }
 
@@ -149,10 +189,19 @@ export function registerPortfolioCommand(program: Command, ctx: CliContext): voi
       console.log();
       console.log(colors.section('Portfolio Overview'));
       console.log(colors.muted(address));
+      if (usedZerion) {
+        console.log(colors.muted('(via Zerion API)'));
+      }
       console.log();
 
       // Total value
-      console.log(colors.section(`Total Value: ${formatUsd(portfolioData.totalValueUsd)}`));
+      let totalLine = `Total Value: ${formatUsd(portfolioData.totalValueUsd)}`;
+      if (portfolioData.change24h) {
+        const sign = portfolioData.change24h.absolute >= 0 ? '+' : '';
+        const changeColor = portfolioData.change24h.absolute >= 0 ? colors.positive : colors.negative;
+        totalLine += `  ${changeColor(`${sign}${formatUsd(portfolioData.change24h.absolute)} (${formatPercent(portfolioData.change24h.relative)})  24h`)}`;
+      }
+      console.log(colors.section(totalLine));
       console.log();
 
       // Token holdings

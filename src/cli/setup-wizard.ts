@@ -52,6 +52,14 @@ export async function runSetupWizard(
       config.heliusApiKey = heliusKey;
     }
 
+    // Zerion API Key
+    console.log();
+    console.log(colors.muted('Zerion (unified EVM + Solana portfolio & history, get key at https://zerion.io/api):'));
+    const zerionKey = await prompt.question(`  Zerion API Key${existingConfig.zerionApiKey ? ' (configured)' : ''}: `);
+    if (zerionKey) {
+      config.zerionApiKey = zerionKey;
+    }
+
     // Coinbase CDP API (JWT-based auth with ECDSA)
     console.log();
     console.log(colors.muted('Coinbase CDP API (create keys at https://portal.cdp.coinbase.com/):'));

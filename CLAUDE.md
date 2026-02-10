@@ -28,12 +28,14 @@ The core `OnchainClient` is composed using TypeScript mixins, each adding method
 ```
 OnchainClientBase (base class with shared utilities)
     ↓
-withCoinGecko → withCoinMarketCap → withDeBank → withHelius → withCoinbase → withBinance → withPolymarket → withEtherscan → withSolscan → withWalletConnect → withNansen
+withCoinGecko → withCoinMarketCap → withDeBank → withHelius → withCoinbase → withBinance → withPolymarket → withEtherscan → withSolscan → withWalletConnect → withZerion → withNansen
     ↓
 OnchainClient (final composed class)
 ```
 
-**Note:** Nansen is a CLI wrapper (not an API client). When the `nansen` CLI is installed, it becomes the preferred provider for balance lookups, taking priority over DeBank/Helius APIs.
+**Note:** Nansen is a CLI wrapper (not an API client). When the `nansen` CLI is installed, it becomes the preferred provider for balance lookups. Zerion is a unified API covering both EVM and Solana chains — when configured, it takes priority over DeBank/Helius.
+
+**Provider priority:** Zerion API → Nansen CLI → DeBank/Helius API → Browser scraping
 
 Each mixin in `src/lib/mixins/` exports:
 - A methods interface (e.g., `CoinGeckoMethods`)
@@ -83,7 +85,7 @@ When DeBank/Helius API keys aren't configured, the CLI can fall back to browser 
 
 Config files: `~/.config/onchain/config.json5` (global) or `./.onchainrc.json5` (local)
 
-Environment variables (override config): `DEBANK_API_KEY`, `HELIUS_API_KEY`, `COINBASE_API_KEY_ID`, `COINBASE_API_KEY_SECRET`, `BINANCE_API_KEY`, `BINANCE_API_SECRET`, `COINGECKO_API_KEY`, `COINMARKETCAP_API_KEY`, `ETHERSCAN_API_KEY`, `SOLSCAN_API_KEY`, `WALLETCONNECT_PROJECT_ID`
+Environment variables (override config): `DEBANK_API_KEY`, `HELIUS_API_KEY`, `ZERION_API_KEY`, `COINBASE_API_KEY_ID`, `COINBASE_API_KEY_SECRET`, `BINANCE_API_KEY`, `BINANCE_API_SECRET`, `COINGECKO_API_KEY`, `COINMARKETCAP_API_KEY`, `ETHERSCAN_API_KEY`, `SOLSCAN_API_KEY`, `WALLETCONNECT_PROJECT_ID`
 
 ## Releasing
 

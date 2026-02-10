@@ -46,17 +46,32 @@ export function registerBalanceCommand(program: Command, ctx: CliContext): void 
         const client = new OnchainClient(clientOpts);
         const useNansen = client.isNansenAvailable();
         const hasApiKey = chainType === 'evm' ? validation.hasDebank : validation.hasHelius;
-        const useBrowser = cmdOpts.browser || (!useNansen && !hasApiKey);
+        const useBrowser = cmdOpts.browser || (!validation.hasZerion && !useNansen && !hasApiKey);
 
         const output = ctx.getOutput();
         const colors = ctx.colors;
 
         let balances: TokenBalance[] = [];
         let totalValueUsd = 0;
-        let source: 'nansen' | 'api' | 'browser' = 'api';
+        let source: 'zerion' | 'nansen' | 'api' | 'browser' = 'api';
 
-        if (useNansen && !cmdOpts.browser) {
-          // Use Nansen CLI (preferred provider)
+        // Try Zerion first (highest priority when configured)
+        if (validation.hasZerion && !cmdOpts.browser) {
+          source = 'zerion';
+          const chains = cmdOpts.chain ? [cmdOpts.chain as EvmChain] : undefined;
+          const result = await client.getZerionBalances(address, chains);
+
+          if (result.success) {
+            balances = result.balances;
+            totalValueUsd = result.totalValueUsd;
+          } else {
+            console.error(colors.muted(`Zerion failed: ${result.error}, falling back...`));
+            source = 'api';
+          }
+        }
+
+        // Try Nansen CLI if Zerion not available or failed
+        if (source === 'api' && useNansen && !cmdOpts.browser) {
           source = 'nansen';
           const chain: SupportedChain = chainType === 'evm' ? ((cmdOpts.chain as EvmChain) ?? 'eth') : 'solana';
 
@@ -66,13 +81,12 @@ export function registerBalanceCommand(program: Command, ctx: CliContext): void 
             balances = result.balances;
             totalValueUsd = result.totalValueUsd;
           } else {
-            // Fall back to API if Nansen fails
             console.error(colors.muted(`Nansen failed: ${result.error}, falling back to API...`));
             source = 'api';
           }
         }
 
-        // Use API fallback if Nansen not available or failed
+        // Use DeBank/Helius API fallback
         if (source === 'api' && !useBrowser) {
           if (chainType === 'evm') {
             const chains = cmdOpts.chain ? [cmdOpts.chain as EvmChain] : undefined;
@@ -160,6 +174,8 @@ export function registerBalanceCommand(program: Command, ctx: CliContext): void 
         console.log(colors.muted(`${address}`));
         if (source === 'nansen') {
           console.log(colors.muted('(via Nansen CLI)'));
+        } else if (source === 'zerion') {
+          console.log(colors.muted('(via Zerion API)'));
         } else if (source === 'browser') {
           console.log(colors.muted('(via browser scraping)'));
         }

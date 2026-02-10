@@ -37,13 +37,13 @@ export function registerHistoryCommand(program: Command, ctx: CliContext): void 
       const creds = ctx.resolveCredentials();
       const validation = validateCredentials(creds);
 
-      if (chainType === 'evm' && !validation.hasDebank) {
-        console.error(`${ctx.p('err')}${getMissingCredentialsMessage('EVM wallet history', ['debank'])}`);
-        process.exit(1);
-      }
+      const hasChainApi = chainType === 'evm' ? validation.hasDebank : validation.hasHelius;
 
-      if (chainType === 'solana' && !validation.hasHelius) {
-        console.error(`${ctx.p('err')}${getMissingCredentialsMessage('Solana wallet history', ['helius'])}`);
+      if (!validation.hasZerion && !hasChainApi) {
+        const requiredCreds = chainType === 'evm' ? ['zerion', 'debank'] : ['zerion', 'helius'];
+        console.error(
+          `${ctx.p('err')}${getMissingCredentialsMessage(`${chainType === 'evm' ? 'EVM' : 'Solana'} wallet history`, requiredCreds)}`,
+        );
         process.exit(1);
       }
 
@@ -54,34 +54,57 @@ export function registerHistoryCommand(program: Command, ctx: CliContext): void 
 
       let transactions: Transaction[] = [];
       let nextCursor: string | undefined;
+      let source: 'zerion' | 'api' = 'api';
 
-      if (chainType === 'evm') {
-        const result = await client.getEvmHistory(address, {
-          chain: cmdOpts.chain as EvmChain | undefined,
+      // Try Zerion first (unified provider)
+      if (validation.hasZerion) {
+        const result = await client.getZerionHistory(address, {
           limit,
           cursor: cmdOpts.cursor,
         });
 
-        if (!result.success) {
+        if (result.success) {
+          transactions = result.transactions;
+          nextCursor = result.nextCursor;
+          source = 'zerion';
+        } else if (hasChainApi) {
+          console.error(colors.muted(`Zerion failed: ${result.error}, falling back to API...`));
+        } else {
           console.error(`${ctx.p('err')}${result.error}`);
           process.exit(1);
         }
+      }
 
-        transactions = result.transactions;
-        nextCursor = result.nextCursor;
-      } else if (chainType === 'solana') {
-        const result = await client.getSolanaHistory(address, {
-          limit,
-          cursor: cmdOpts.cursor,
-        });
+      // Fall back to DeBank/Helius
+      if (source === 'api') {
+        if (chainType === 'evm') {
+          const result = await client.getEvmHistory(address, {
+            chain: cmdOpts.chain as EvmChain | undefined,
+            limit,
+            cursor: cmdOpts.cursor,
+          });
 
-        if (!result.success) {
-          console.error(`${ctx.p('err')}${result.error}`);
-          process.exit(1);
+          if (!result.success) {
+            console.error(`${ctx.p('err')}${result.error}`);
+            process.exit(1);
+          }
+
+          transactions = result.transactions;
+          nextCursor = result.nextCursor;
+        } else if (chainType === 'solana') {
+          const result = await client.getSolanaHistory(address, {
+            limit,
+            cursor: cmdOpts.cursor,
+          });
+
+          if (!result.success) {
+            console.error(`${ctx.p('err')}${result.error}`);
+            process.exit(1);
+          }
+
+          transactions = result.transactions;
+          nextCursor = result.nextCursor;
         }
-
-        transactions = result.transactions;
-        nextCursor = result.nextCursor;
       }
 
       if (cmdOpts.json || output.json) {
@@ -97,6 +120,9 @@ export function registerHistoryCommand(program: Command, ctx: CliContext): void 
       console.log();
       console.log(colors.section(`Transaction History`));
       console.log(colors.muted(`${address}`));
+      if (source === 'zerion') {
+        console.log(colors.muted('(via Zerion API)'));
+      }
       console.log();
 
       if (transactions.length === 0) {
