@@ -4,14 +4,17 @@ CLI for crypto portfolio tracking, market data, and CEX history. Designed for bo
 
 ## Installation
 
-```bash
-npm install -g @skillhq/onchain
+Install as a Claude Code skill:
+```
+https://skills.sh/skillhq/onchain/onchain
 ```
 
-Or run directly with npx:
+Then configure your API keys:
 ```bash
-npx @skillhq/onchain price btc
+onchain setup
 ```
+
+This interactive wizard walks you through configuring Zerion (recommended), Coinbase, Binance, and other providers.
 
 ## Quick Start
 
