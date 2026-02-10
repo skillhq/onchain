@@ -4,9 +4,14 @@ CLI for crypto portfolio tracking, market data, and CEX history. Designed for bo
 
 ## Installation
 
-Install as a Claude Code skill:
+Install the skill for your AI coding agent:
+```bash
+npx skills add https://github.com/skillhq/onchain --skill onchain
 ```
-https://skills.sh/skillhq/onchain/onchain
+
+Install the CLI globally:
+```bash
+npm install -g @skillhq/onchain
 ```
 
 Then configure your API keys:
