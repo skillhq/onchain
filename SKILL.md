@@ -16,9 +16,10 @@ onchain setup
 ```
 
 This interactive wizard helps configure:
+- **Zerion** - Unified EVM + Solana portfolio, balances, and history (recommended — replaces DeBank + Helius for most features)
 - **Coinbase/Binance** - For CEX balances and trade history
-- **DeBank** - For EVM wallet data (Ethereum, Polygon, Arbitrum, etc.)
-- **Helius** - For Solana wallet data
+- **DeBank** - For EVM wallet data (fallback if no Zerion key)
+- **Helius** - For Solana wallet data (fallback if no Zerion key)
 
 **Without setup**: Only `onchain price` and `onchain markets` work (using free CoinGecko tier).
 
@@ -170,10 +171,16 @@ Config file: `~/.config/onchain/config.json5`
 
 | Feature | API Key | Get Key |
 |---------|---------|---------|
-| EVM wallets | `DEBANK_API_KEY` | [DeBank](https://cloud.debank.com/) |
-| Solana wallets | `HELIUS_API_KEY` | [Helius](https://helius.xyz/) |
+| Unified wallets (EVM + Solana) | `ZERION_API_KEY` | [Zerion](https://zerion.io/api) |
 | Coinbase CEX | `COINBASE_API_KEY` + `COINBASE_API_SECRET` | [Coinbase](https://www.coinbase.com/settings/api) |
 | Binance CEX | `BINANCE_API_KEY` + `BINANCE_API_SECRET` | [Binance](https://www.binance.com/en/my/settings/api-management) |
+
+### Fallback API Keys (if no Zerion key)
+
+| Feature | API Key | Get Key |
+|---------|---------|---------|
+| EVM wallets | `DEBANK_API_KEY` | [DeBank](https://cloud.debank.com/) |
+| Solana wallets | `HELIUS_API_KEY` | [Helius](https://helius.xyz/) |
 
 ### Optional API Keys
 
@@ -235,11 +242,14 @@ onchain --json price eth | jq '.priceUsd'
 
 ## Supported Chains
 
-### EVM (via DeBank)
-Ethereum, BNB Chain, Polygon, Arbitrum, Optimism, Avalanche, Base, zkSync Era, Linea, Scroll, Blast, Mantle, Gnosis, Fantom, Celo, and more.
+### EVM + Solana (via Zerion — preferred)
+Ethereum, BNB Chain, Polygon, Arbitrum, Optimism, Avalanche, Base, zkSync Era, Linea, Scroll, Blast, Mantle, Gnosis, Fantom, Celo, Solana, and more. Single API key covers all chains.
 
-### Solana (via Helius)
-Full Solana mainnet support including SPL tokens and NFTs.
+### EVM (via DeBank — fallback)
+Same EVM chains as above, requires separate DeBank API key.
+
+### Solana (via Helius — fallback)
+Full Solana mainnet support including SPL tokens and NFTs, requires separate Helius API key.
 
 ## Agent Integration
 
