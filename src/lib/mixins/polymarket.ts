@@ -355,13 +355,11 @@ export function withPolymarket<TBase extends AbstractConstructor<OnchainClientBa
     async searchPolymarkets(query: string, options?: PolymarketFilterOptions): Promise<PolymarketResult> {
       try {
         const limit = options?.limit ?? 10;
-        const hasFilters =
-          (options?.excludeTags && options.excludeTags.length > 0) ||
-          (options?.includeTags && options.includeTags.length > 0);
 
-        // Fetch more events if we need to filter client-side
-        const fetchLimit = hasFilters ? Math.max(limit * 3, 50) : limit;
-        const url = `${POLYMARKET_API_BASE}/events?title_contains=${encodeURIComponent(query)}&active=true&closed=false&limit=${fetchLimit}&related_tags=true`;
+        // The gamma API does not support server-side text search (title_contains, q, etc. are all ignored).
+        // We must fetch a large set and filter client-side by matching query against event titles.
+        const fetchLimit = 200;
+        const url = `${POLYMARKET_API_BASE}/events?active=true&closed=false&limit=${fetchLimit}&order=volume&ascending=false&related_tags=true`;
 
         const response = await this.fetchWithTimeout(url, {
           headers: { Accept: 'application/json' },
@@ -373,9 +371,17 @@ export function withPolymarket<TBase extends AbstractConstructor<OnchainClientBa
 
         const data = (await response.json()) as PolymarketEvent[];
 
+        // Client-side text search: match query against event title and market questions
+        const queryLower = query.toLowerCase();
+        const queryTerms = queryLower.split(/\s+/).filter((t) => t.length > 0);
+
         const markets: PolymarketMarket[] = [];
 
         for (const event of data) {
+          // Check if event title or any market question matches the query
+          const titleLower = event.title?.toLowerCase() ?? '';
+          const eventMatches = queryTerms.some((term) => titleLower.includes(term));
+
           // Apply tag filters at the event level
           if (!eventMatchesTags(event, options)) {
             continue;
@@ -383,6 +389,14 @@ export function withPolymarket<TBase extends AbstractConstructor<OnchainClientBa
 
           const eventMarkets = event.markets ?? [];
           for (const market of eventMarkets) {
+            const questionLower = market.question?.toLowerCase() ?? '';
+            const marketMatches = queryTerms.some((term) => questionLower.includes(term));
+
+            // Skip if neither event title nor market question matches the query
+            if (!eventMatches && !marketMatches) {
+              continue;
+            }
+
             const volume = Number.parseFloat(market.volume ?? event.volume ?? '0');
             const liquidity = Number.parseFloat(market.liquidity ?? event.liquidity ?? '0');
 
@@ -414,6 +428,9 @@ export function withPolymarket<TBase extends AbstractConstructor<OnchainClientBa
             });
           }
         }
+
+        // Sort by volume descending for relevance
+        markets.sort((a, b) => b.volume - a.volume);
 
         return { success: true, markets: markets.slice(0, limit) };
       } catch (error) {

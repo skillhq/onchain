@@ -132,9 +132,8 @@ export function withCoinGecko<TBase extends AbstractConstructor<OnchainClientBas
       return TOKEN_ID_MAP[lower] ?? lower;
     }
 
-    async getTokenPrice(tokenIdOrSymbol: string): Promise<PriceResult> {
+    private async getTokenPriceById(tokenId: string): Promise<PriceResult> {
       try {
-        const tokenId = this.resolveTokenId(tokenIdOrSymbol);
         const url = `${this.getApiBase()}/coins/${tokenId}?localization=false&tickers=false&community_data=false&developer_data=false&sparkline=false`;
 
         const response = await this.fetchWithTimeout(url, {
@@ -143,7 +142,7 @@ export function withCoinGecko<TBase extends AbstractConstructor<OnchainClientBas
 
         if (!response.ok) {
           if (response.status === 404) {
-            return { success: false, error: `Token "${tokenIdOrSymbol}" not found` };
+            return { success: false, error: `Token "${tokenId}" not found` };
           }
           return { success: false, error: `CoinGecko API error: ${response.status}` };
         }
@@ -207,6 +206,22 @@ export function withCoinGecko<TBase extends AbstractConstructor<OnchainClientBas
           error: `Failed to fetch token price: ${error instanceof Error ? error.message : String(error)}`,
         };
       }
+    }
+
+    async getTokenPrice(tokenIdOrSymbol: string): Promise<PriceResult> {
+      const tokenId = this.resolveTokenId(tokenIdOrSymbol);
+      const result = await this.getTokenPriceById(tokenId);
+
+      // If direct lookup failed with "not found" and input wasn't in TOKEN_ID_MAP,
+      // fall back to searching CoinGecko for the correct ID
+      if (!result.success && result.error.includes('not found') && !TOKEN_ID_MAP[tokenIdOrSymbol.toLowerCase()]) {
+        const searchResult = await this.searchTokens(tokenIdOrSymbol, 1);
+        if (searchResult.success && searchResult.tokens.length > 0) {
+          return this.getTokenPriceById(searchResult.tokens[0].id);
+        }
+      }
+
+      return result;
     }
 
     async getTokenPrices(tokenIdsOrSymbols: string[]): Promise<PricesResult> {
