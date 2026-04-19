@@ -13,6 +13,7 @@ import type {
 
 const POLYMARKET_API_BASE = 'https://gamma-api.polymarket.com';
 const POLYMARKET_CLOB_API = 'https://clob.polymarket.com';
+const WHITESPACE_SPLIT = /\s+/;
 
 export interface PolymarketMethods {
   getPolymarketTags(options?: { popular?: boolean }): Promise<PolymarketTagsResult>;
@@ -373,7 +374,7 @@ export function withPolymarket<TBase extends AbstractConstructor<OnchainClientBa
 
         // Client-side text search: match query against event title and market questions
         const queryLower = query.toLowerCase();
-        const queryTerms = queryLower.split(/\s+/).filter((t) => t.length > 0);
+        const queryTerms = queryLower.split(WHITESPACE_SPLIT).filter((t) => t.length > 0);
 
         const markets: PolymarketMarket[] = [];
 
