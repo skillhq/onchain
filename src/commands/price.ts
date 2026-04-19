@@ -1,6 +1,7 @@
 import type { Command } from 'commander';
 import type { CliContext } from '../cli/shared.js';
 import { OnchainClient } from '../lib/onchain-client.js';
+import { isNotConfiguredError, isRateLimitedError } from '../lib/utils/fallback.js';
 import { formatCompactUsd, formatPercent, formatUsd } from '../lib/utils/formatters.js';
 
 export function registerPriceCommand(program: Command, ctx: CliContext): void {
@@ -16,7 +17,17 @@ export function registerPriceCommand(program: Command, ctx: CliContext): void {
       clientOpts.timeoutMs = timeoutMs;
 
       const client = new OnchainClient(clientOpts);
-      const result = await client.getTokenPrice(token);
+      let result = await client.getTokenPrice(token);
+
+      if (!result.success && isRateLimitedError(result.error)) {
+        const cmcResult = await client.cmcGetTokenPrice(token);
+        if (cmcResult.success) {
+          console.error(`${ctx.p('warn')}CoinGecko rate-limited; using CoinMarketCap fallback`);
+          result = cmcResult;
+        } else if (!isNotConfiguredError(cmcResult.error)) {
+          result = { success: false, error: `${result.error} | CMC fallback: ${cmcResult.error}` };
+        }
+      }
 
       if (!result.success) {
         console.error(`${ctx.p('err')}${result.error}`);
