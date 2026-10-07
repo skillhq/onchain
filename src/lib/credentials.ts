@@ -1,4 +1,5 @@
 import type { OnchainConfig } from './config.js';
+import { type KeychainSecrets, readKeychainSecrets } from './keychain.js';
 
 export interface ResolvedCredentials {
   debankApiKey?: string;
@@ -20,23 +21,29 @@ export interface ResolvedCredentials {
   warnings: string[];
 }
 
-export function resolveCredentials(config: OnchainConfig, env: NodeJS.ProcessEnv = process.env): ResolvedCredentials {
+export function resolveCredentials(
+  config: OnchainConfig,
+  env: NodeJS.ProcessEnv = process.env,
+  keychain: KeychainSecrets = readKeychainSecrets(),
+): ResolvedCredentials {
   const warnings: string[] = [];
 
-  // Resolve each credential from env first, then config
-  const debankApiKey = env.DEBANK_API_KEY ?? config.debankApiKey;
-  const heliusApiKey = env.HELIUS_API_KEY ?? config.heliusApiKey;
+  // Resolve each credential from env first, then config files, then the macOS Keychain
+  const debankApiKey = env.DEBANK_API_KEY ?? config.debankApiKey ?? keychain.debankApiKey;
+  const heliusApiKey = env.HELIUS_API_KEY ?? config.heliusApiKey ?? keychain.heliusApiKey;
   // Coinbase CDP API credentials
-  const coinbaseApiKeyId = env.COINBASE_API_KEY_ID ?? config.coinbaseApiKeyId;
-  const coinbaseApiKeySecret = env.COINBASE_API_KEY_SECRET ?? config.coinbaseApiKeySecret;
-  const binanceApiKey = env.BINANCE_API_KEY ?? config.binanceApiKey;
-  const binanceApiSecret = env.BINANCE_API_SECRET ?? config.binanceApiSecret;
-  const coingeckoApiKey = env.COINGECKO_API_KEY ?? config.coingeckoApiKey;
-  const coinmarketcapApiKey = env.COINMARKETCAP_API_KEY ?? config.coinmarketcapApiKey;
-  const etherscanApiKey = env.ETHERSCAN_API_KEY ?? config.etherscanApiKey;
-  const solscanApiKey = env.SOLSCAN_API_KEY ?? config.solscanApiKey;
-  const walletConnectProjectId = env.WALLETCONNECT_PROJECT_ID ?? config.walletConnectProjectId;
-  const zerionApiKey = env.ZERION_API_KEY ?? config.zerionApiKey;
+  const coinbaseApiKeyId = env.COINBASE_API_KEY_ID ?? config.coinbaseApiKeyId ?? keychain.coinbaseApiKeyId;
+  const coinbaseApiKeySecret =
+    env.COINBASE_API_KEY_SECRET ?? config.coinbaseApiKeySecret ?? keychain.coinbaseApiKeySecret;
+  const binanceApiKey = env.BINANCE_API_KEY ?? config.binanceApiKey ?? keychain.binanceApiKey;
+  const binanceApiSecret = env.BINANCE_API_SECRET ?? config.binanceApiSecret ?? keychain.binanceApiSecret;
+  const coingeckoApiKey = env.COINGECKO_API_KEY ?? config.coingeckoApiKey ?? keychain.coingeckoApiKey;
+  const coinmarketcapApiKey = env.COINMARKETCAP_API_KEY ?? config.coinmarketcapApiKey ?? keychain.coinmarketcapApiKey;
+  const etherscanApiKey = env.ETHERSCAN_API_KEY ?? config.etherscanApiKey ?? keychain.etherscanApiKey;
+  const solscanApiKey = env.SOLSCAN_API_KEY ?? config.solscanApiKey ?? keychain.solscanApiKey;
+  const walletConnectProjectId =
+    env.WALLETCONNECT_PROJECT_ID ?? config.walletConnectProjectId ?? keychain.walletConnectProjectId;
+  const zerionApiKey = env.ZERION_API_KEY ?? config.zerionApiKey ?? keychain.zerionApiKey;
 
   return {
     debankApiKey,

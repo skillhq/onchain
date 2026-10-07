@@ -1,7 +1,8 @@
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { chmodSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { dirname, join } from 'node:path';
 import JSON5 from 'json5';
+import { isKeychainAvailable, omitSecrets, pickSecrets, SECRET_FIELDS, writeKeychainSecrets } from './keychain.js';
 
 export interface PolymarketPreferences {
   excludeTags?: string[]; // e.g., ["sports", "nfl", "nba"]
@@ -75,12 +76,54 @@ export function saveConfig(config: Partial<OnchainConfig>, options?: { global?: 
     mkdirSync(dir, { recursive: true });
   }
 
+  // On macOS secrets go to the Keychain and never touch the config file
+  let fileUpdates = config;
+  if (isKeychainAvailable()) {
+    const secrets = pickSecrets(config);
+    if (Object.keys(secrets).length > 0) {
+      writeKeychainSecrets(secrets);
+    }
+    fileUpdates = omitSecrets(config);
+  }
+
   // Load existing config and merge
   const existing = existsSync(path) ? readConfigFile(path, () => {}) : {};
-  const merged = { ...existing, ...config };
+  writeConfigFile(path, { ...existing, ...fileUpdates });
+}
 
-  const content = JSON5.stringify(merged, null, 2);
-  writeFileSync(path, content, 'utf8');
+function writeConfigFile(path: string, config: Partial<OnchainConfig>): void {
+  writeFileSync(path, JSON5.stringify(config, null, 2), { encoding: 'utf8', mode: 0o600 });
+  chmodSync(path, 0o600);
+}
+
+// Moves every secret out of the global and local config files into the Keychain.
+// Returns the field names moved per file; values are never returned.
+export function migrateSecretsToKeychain(): { path: string; fields: string[] }[] {
+  if (!isKeychainAvailable()) {
+    throw new Error('macOS Keychain is not available on this platform');
+  }
+  const results: { path: string; fields: string[] }[] = [];
+  // Global first so a local override wins in the Keychain, matching load order
+  for (const path of [getGlobalConfigPath(), getLocalConfigPath()]) {
+    if (!existsSync(path)) {
+      continue;
+    }
+    const raw = readConfigFile(path, (message) => {
+      throw new Error(message);
+    });
+    const secrets = pickSecrets(raw);
+    const fields = SECRET_FIELDS.filter((field) => field in raw);
+    if (fields.length === 0) {
+      continue;
+    }
+    // Keychain write is verified before the file loses its copy
+    if (Object.keys(secrets).length > 0) {
+      writeKeychainSecrets(secrets);
+    }
+    writeConfigFile(path, omitSecrets(raw));
+    results.push({ path, fields });
+  }
+  return results;
 }
 
 export function getConfigPath(options?: { global?: boolean }): string {

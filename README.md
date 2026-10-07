@@ -97,6 +97,8 @@ Config file locations:
 - Global: `~/.config/onchain/config.json5`
 - Local: `./.onchainrc.json5`
 
+🔐 On macOS, API keys are stored in the Keychain (item `onchain` / `credentials`), not in the config file. Run `onchain config migrate-keychain` to move keys from an older config file. Lookup order: environment variables, then config files, then the Keychain.
+
 ## Global Options
 
 ```bash

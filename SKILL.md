@@ -141,7 +141,10 @@ onchain polymarket sentiment fed --json # JSON output for agents
 onchain setup                 # Interactive setup wizard
 onchain config                # View current config
 onchain config set <key> <value>  # Set config value (e.g., timeoutMs)
+onchain config migrate-keychain   # macOS: move API keys from config files into the Keychain
 ```
+
+On macOS, `onchain setup` stores API keys in the Keychain, not the config file. Never print config files or Keychain values.
 
 ### Wallet Connectivity (WalletConnect)
 
@@ -166,7 +169,7 @@ onchain wallet disconnect           # Disconnect wallet
 
 ## Configuration
 
-Config file: `~/.config/onchain/config.json5`
+Config file: `~/.config/onchain/config.json5` (on macOS, API keys live in the Keychain instead)
 
 ### Required API Keys
 

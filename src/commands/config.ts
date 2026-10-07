@@ -1,7 +1,8 @@
 import type { Command } from 'commander';
 import type { CliContext } from '../cli/shared.js';
-import { getConfigPath, saveConfig } from '../lib/config.js';
+import { getConfigPath, migrateSecretsToKeychain, saveConfig } from '../lib/config.js';
 import { validateCredentials } from '../lib/credentials.js';
+import { readKeychainSecrets } from '../lib/keychain.js';
 
 export function registerConfigCommand(program: Command, ctx: CliContext): void {
   const configCmd = program.command('config').description('View and manage configuration');
@@ -17,6 +18,16 @@ export function registerConfigCommand(program: Command, ctx: CliContext): void {
       const validation = validateCredentials(creds);
       const colors = ctx.colors;
       const output = ctx.getOutput();
+      const keychain = readKeychainSecrets();
+      const sourceOf = (field: keyof typeof keychain, resolved: string | undefined): string | undefined => {
+        if (!resolved) {
+          return undefined;
+        }
+        if (config[field] === resolved) {
+          return 'config';
+        }
+        return keychain[field] === resolved ? 'keychain' : 'env';
+      };
 
       if (cmdOpts.json || output.json) {
         // Don't expose secrets in JSON output
@@ -53,46 +64,16 @@ export function registerConfigCommand(program: Command, ctx: CliContext): void {
         return `  ${name.padEnd(15)} ${status}${srcLabel}`;
       };
 
-      console.log(
-        credStatus(
-          'DeBank',
-          validation.hasDebank,
-          creds.debankApiKey ? (config.debankApiKey ? 'config' : 'env') : undefined,
-        ),
-      );
-      console.log(
-        credStatus(
-          'Helius',
-          validation.hasHelius,
-          creds.heliusApiKey ? (config.heliusApiKey ? 'config' : 'env') : undefined,
-        ),
-      );
-      console.log(
-        credStatus(
-          'Coinbase',
-          validation.hasCoinbase,
-          creds.coinbaseApiKeyId ? (config.coinbaseApiKeyId ? 'config' : 'env') : undefined,
-        ),
-      );
-      console.log(
-        credStatus(
-          'Binance',
-          validation.hasBinance,
-          creds.binanceApiKey ? (config.binanceApiKey ? 'config' : 'env') : undefined,
-        ),
-      );
-      console.log(
-        credStatus(
-          'CoinGecko',
-          validation.hasCoinGecko,
-          creds.coingeckoApiKey ? (config.coingeckoApiKey ? 'config' : 'env') : undefined,
-        ),
-      );
+      console.log(credStatus('DeBank', validation.hasDebank, sourceOf('debankApiKey', creds.debankApiKey)));
+      console.log(credStatus('Helius', validation.hasHelius, sourceOf('heliusApiKey', creds.heliusApiKey)));
+      console.log(credStatus('Coinbase', validation.hasCoinbase, sourceOf('coinbaseApiKeyId', creds.coinbaseApiKeyId)));
+      console.log(credStatus('Binance', validation.hasBinance, sourceOf('binanceApiKey', creds.binanceApiKey)));
+      console.log(credStatus('CoinGecko', validation.hasCoinGecko, sourceOf('coingeckoApiKey', creds.coingeckoApiKey)));
       console.log(
         credStatus(
           'CoinMarketCap',
           validation.hasCoinMarketCap,
-          creds.coinmarketcapApiKey ? (config.coinmarketcapApiKey ? 'config' : 'env') : undefined,
+          sourceOf('coinmarketcapApiKey', creds.coinmarketcapApiKey),
         ),
       );
       console.log();
@@ -101,6 +82,25 @@ export function registerConfigCommand(program: Command, ctx: CliContext): void {
       console.log(colors.accent('Settings:'));
       console.log(`  Timeout: ${config.timeoutMs ?? 30000}ms`);
       console.log();
+    });
+
+  configCmd
+    .command('migrate-keychain')
+    .description('Move API keys from config files into the macOS Keychain')
+    .action(() => {
+      try {
+        const moved = migrateSecretsToKeychain();
+        if (moved.length === 0) {
+          console.log(`${ctx.p('info')}No API keys found in config files.`);
+          return;
+        }
+        for (const { path, fields } of moved) {
+          console.log(`${ctx.p('ok')}Moved ${fields.join(', ')} from ${path} to the Keychain`);
+        }
+      } catch (error) {
+        console.error(`${ctx.p('err')}${error instanceof Error ? error.message : String(error)}`);
+        process.exit(1);
+      }
     });
 
   configCmd

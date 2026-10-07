@@ -2,6 +2,7 @@ import type { Command } from 'commander';
 import { runSetupWizard } from '../cli/setup-wizard.js';
 import type { CliContext } from '../cli/shared.js';
 import { getConfigPath, saveConfig } from '../lib/config.js';
+import { isKeychainAvailable, readKeychainSecrets } from '../lib/keychain.js';
 
 export function registerSetupCommand(program: Command, ctx: CliContext): void {
   program
@@ -12,7 +13,7 @@ export function registerSetupCommand(program: Command, ctx: CliContext): void {
       const colors = ctx.colors;
 
       try {
-        const configUpdates = await runSetupWizard(ctx.config, colors);
+        const configUpdates = await runSetupWizard({ ...readKeychainSecrets(), ...ctx.config }, colors);
 
         if (Object.keys(configUpdates).length === 0) {
           console.log(colors.muted('No changes made.'));
@@ -23,6 +24,9 @@ export function registerSetupCommand(program: Command, ctx: CliContext): void {
 
         const configPath = getConfigPath({ global: cmdOpts.global });
         console.log(`${ctx.p('ok')}Configuration saved to ${configPath}`);
+        if (isKeychainAvailable()) {
+          console.log(colors.muted('API keys are stored in the macOS Keychain.'));
+        }
         console.log();
 
         // Show what was configured
