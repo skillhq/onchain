@@ -18,7 +18,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 24
           cache: pnpm
           registry-url: https://registry.npmjs.org
 
@@ -27,6 +27,6 @@ jobs:
       - run: pnpm run test
       - run: pnpm run build:dist
 
+      # Trusted publishing (OIDC) needs npm >= 11.5.1; no token is stored
+      - run: npm install -g npm@latest
       - run: npm publish --provenance --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
